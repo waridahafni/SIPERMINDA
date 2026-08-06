@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class PermintaanController extends Controller
 {
@@ -192,7 +193,11 @@ class PermintaanController extends Controller
             abort(403, 'Anda tidak berwenang mengunduh file hasil.');
         }
 
-        return response()->download(storage_path('app/' . $permintaan->file_hasil_path));
+        if (!Storage::disk('local')->exists($permintaan->file_hasil_path)) {
+            return redirect()->back()->with('error', 'File hasil tidak ditemukan di penyimpanan.');
+        }
+
+        return response()->download(Storage::disk('local')->path($permintaan->file_hasil_path));
     }
 
     /**

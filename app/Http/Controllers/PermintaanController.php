@@ -12,6 +12,7 @@ use App\Models\UnduhanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class PermintaanController extends Controller
 {
@@ -104,6 +105,10 @@ class PermintaanController extends Controller
             return redirect()->back()->with('error', 'File hasil belum tersedia.');
         }
 
+        if (!Storage::disk('local')->exists($permintaan->file_hasil_path)) {
+            return redirect()->back()->with('error', 'File hasil tidak ditemukan di penyimpanan.');
+        }
+
         UnduhanLog::create([
             'permintaan_data_id' => $permintaan->id,
             'pemohon_id' => $permintaan->pemohon_id,
@@ -111,6 +116,6 @@ class PermintaanController extends Controller
             'downloaded_at' => now(),
         ]);
 
-        return response()->download(storage_path('app/' . $permintaan->file_hasil_path));
+        return response()->download(Storage::disk('local')->path($permintaan->file_hasil_path));
     }
 }
