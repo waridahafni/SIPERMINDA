@@ -11,12 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('permission:lihat-laporan');
-    }
-
     public function index(Request $request)
     {
         $query = PermintaanData::query();

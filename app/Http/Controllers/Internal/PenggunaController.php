@@ -10,12 +10,6 @@ use Spatie\Permission\Models\Role;
 
 class PenggunaController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('role:admin');
-    }
-
     public function index()
     {
         $users = User::with('roles')->latest()->paginate(15);

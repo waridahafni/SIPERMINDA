@@ -10,11 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class KatalogController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function index(Request $request)
     {
         $query = DatasetTerbuka::with('kategori', 'uploader');
