@@ -30,7 +30,7 @@ class PermintaanData extends Model
 
     public function uploader(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'uploaded_by');
     }
 
     public function approvalLog(): HasMany
