@@ -94,7 +94,7 @@ Skema database detail (MySQL/MariaDB), mengacu pada garis besar di PRD bagian 8.
 | jenis_data | VARCHAR(255) | misal "KCDA 2025" |
 | tujuan_penggunaan | TEXT | |
 | periode_data | VARCHAR(50), nullable | |
-| status | ENUM('diajukan','diverifikasi_staf','disetujui_kasi','disetujui_kabid','ditolak','menunggu_upload','data_siap','selesai') | |
+| status | ENUM('diajukan','diverifikasi_staf','disetujui_kasi','disetujui_kabid','ditolak','data_siap','selesai') | |
 | file_hasil_path | VARCHAR(255), nullable | diisi setelah petugas upload |
 | uploaded_by | BIGINT, FK → users.id, nullable | petugas yang upload hasil |
 | created_at, updated_at | TIMESTAMP | |

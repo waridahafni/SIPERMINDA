@@ -118,12 +118,12 @@ class AlurPermintaanTest extends TestCase
 
         $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'disetujui_kasi']);
 
-        // Tahap 3: Kabid menyetujui -> menunggu upload.
+        // Tahap 3: Kabid menyetujui -> disetujui_kabid (final approval).
         $this->actingAs($kabid)->post("/internal/permintaan/{$permintaan->id}/keputusan", [
             'keputusan' => 'setuju',
         ])->assertRedirect(route('internal.permintaan.index'));
 
-        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'menunggu_upload']);
+        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'disetujui_kabid']);
 
         // Tahap 4: Staf upload hasil -> data siap.
         $file = \Illuminate\Http\UploadedFile::fake()->create('hasil.xlsx', 100);
@@ -206,5 +206,47 @@ class AlurPermintaanTest extends TestCase
         $this->assertEquals('setuju', $log->keputusan);
         $this->assertEquals('Kelengkapan ok', $log->catatan);
         $this->assertEquals($staf->id, $log->approver_id);
+    }
+
+    public function test_permintaan_data_siap_dapat_ditandai_selesai(): void
+    {
+        $staf = \App\Models\User::factory()->create();
+        $staf->assignRole('staf');
+
+        $pemohon = $this->registerPemohon();
+        $permintaan = PermintaanData::create([
+            'nomor_tiket' => 'BPS/PD/2025/00006',
+            'pemohon_id' => $pemohon->id,
+            'jenis_data' => 'Data Khusus',
+            'tujuan_penggunaan' => 'Riset',
+            'periode_data' => '2024',
+            'status' => 'data_siap',
+            'file_hasil_path' => 'hasil_permintaan/uji.xlsx',
+        ]);
+
+        $this->actingAs($staf)->post("/internal/permintaan/{$permintaan->id}/selesai")
+            ->assertRedirect(route('internal.permintaan.index'));
+
+        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'selesai']);
+    }
+
+    public function test_permintaan_belum_data_siap_tidak_bisa_ditandai_selesai(): void
+    {
+        $staf = \App\Models\User::factory()->create();
+        $staf->assignRole('staf');
+
+        $pemohon = $this->registerPemohon();
+        $permintaan = PermintaanData::create([
+            'nomor_tiket' => 'BPS/PD/2025/00007',
+            'pemohon_id' => $pemohon->id,
+            'jenis_data' => 'Data Khusus',
+            'tujuan_penggunaan' => 'Riset',
+            'periode_data' => '2024',
+            'status' => 'diajukan',
+        ]);
+
+        $this->actingAs($staf)->post("/internal/permintaan/{$permintaan->id}/selesai");
+
+        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'diajukan']);
     }
 }
