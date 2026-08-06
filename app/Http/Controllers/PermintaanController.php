@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePermintaanRequest;
 use App\Models\KategoriData;
+use App\Models\NomorTiketCounter;
 use App\Models\NotifikasiLog;
 use App\Models\Pemohon;
 use App\Models\PermintaanData;
 use App\Models\UnduhanLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PermintaanController extends Controller
@@ -23,19 +25,19 @@ class PermintaanController extends Controller
     {
         $pemohon = Pemohon::where('no_hp', session('pemohon_otp'))->firstOrFail();
 
-        $tahun = now()->year;
-        $lastPermintaan = PermintaanData::whereYear('created_at', $tahun)
-            ->orderBy('id', 'desc')
-            ->first();
+        $nomorTiket = DB::transaction(function () {
+            $tahun = now()->year;
 
-        if ($lastPermintaan) {
-            $lastNumber = (int) substr($lastPermintaan->nomor_tiket, -5);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+            $counter = NomorTiketCounter::lockForUpdate()->firstOrCreate(
+                ['tahun' => $tahun],
+                ['nomor_terakhir' => 0]
+            );
 
-        $nomorTiket = sprintf('BPS/PD/%d/%05d', $tahun, $newNumber);
+            $nomorBaru = $counter->nomor_terakhir + 1;
+            $counter->update(['nomor_terakhir' => $nomorBaru]);
+
+            return sprintf('BPS/PD/%d/%05d', $tahun, $nomorBaru);
+        });
 
         $permintaan = PermintaanData::create([
             'nomor_tiket' => $nomorTiket,
