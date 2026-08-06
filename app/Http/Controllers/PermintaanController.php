@@ -81,6 +81,12 @@ class PermintaanController extends Controller
 
     public function selesai(PermintaanData $permintaan)
     {
+        $noHp = session('pemohon_otp');
+
+        if (!$noHp || !$permintaan->pemohon || $permintaan->pemohon->no_hp !== $noHp) {
+            abort(403, 'Anda tidak berhak melihat halaman ini.');
+        }
+
         return view('public.permintaan.selesai', compact('permintaan'));
     }
 

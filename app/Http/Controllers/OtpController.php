@@ -38,12 +38,10 @@ class OtpController extends Controller
         $noHp = $request->no_hp;
 
         // Rate limit: maksimal 3x pengiriman per nomor HP per 10 menit.
-        $cekRitase = OtpVerification::where('no_hp', $noHp)
-            ->where('created_at', '>', now()->subMinutes(10))
-            ->count();
-
-        if ($cekRitase >= 3) {
-            return redirect()->back()->with('error', 'Terlalu banyak permintaan OTP. Silakan coba lagi 10 menit kemudian.');
+        $key = 'otp-kirim:' . $noHp;
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $seconds = RateLimiter::availableIn($key);
+            return redirect()->back()->with('error', "Terlalu banyak permintaan OTP. Coba lagi dalam {$seconds} detik.");
         }
 
         $kode = $this->generateKode();
@@ -56,13 +54,17 @@ class OtpController extends Controller
             'created_at' => now(),
         ]);
 
+        RateLimiter::hit($key, 600);
+
         // Simpan data pemohon sementara di session untuk tahap berikutnya.
+        // Gunakan nilai lama bila field tidak dikirim ulang agar tidak terhapus.
+        $lama = $request->session()->get('otp_pemohon', []);
         $request->session()->put('otp_pemohon', [
             'no_hp' => $noHp,
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'jenis_pemohon' => $request->jenis_pemohon,
-            'nama_instansi' => $request->nama_instansi,
+            'nama' => $request->filled('nama') ? $request->nama : ($lama['nama'] ?? null),
+            'email' => $request->filled('email') ? $request->email : ($lama['email'] ?? null),
+            'jenis_pemohon' => $request->filled('jenis_pemohon') ? $request->jenis_pemohon : ($lama['jenis_pemohon'] ?? null),
+            'nama_instansi' => $request->filled('nama_instansi') ? $request->nama_instansi : ($lama['nama_instansi'] ?? null),
         ]);
 
         // Kirim OTP via SMS/WA gateway. Fallback ke log hanya saat environment local,
@@ -89,7 +91,9 @@ class OtpController extends Controller
             return redirect()->route('otp.form')->with('error', 'Silakan masukkan nomor HP terlebih dahulu.');
         }
 
-        return $this->kirimOtp($request->merge(['no_hp' => $noHp]));
+        $request->merge(['no_hp' => $noHp]);
+
+        return $this->kirimOtp($request);
     }
 
     /**
@@ -137,6 +141,9 @@ class OtpController extends Controller
 
         // Perbarui no_hp_verified dan data dari session jika perlu.
         $pemohon->forceFill(['no_hp_verified_at' => now()])->save();
+
+        // Rotasi ID session untuk mencegah session fixation setelah login OTP.
+        $request->session()->regenerate();
 
         $request->session()->put([
             'pemohon_otp' => $pemohon->no_hp,
