@@ -32,7 +32,7 @@
             <p class="text-sm text-gray-500">Dataset Aktif</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm border p-6">
-            <p class="text-3xl font-bold text-gray-800">{{ $perStatus['data_siap'] + $perStatus['selesai'] ?? 0 }}</p>
+            <p class="text-3xl font-bold text-gray-800">{{ ($perStatus['data_siap'] ?? 0) + ($perStatus['selesai'] ?? 0) }}</p>
             <p class="text-sm text-gray-500">Permintaan Selesai</p>
         </div>
     </div>

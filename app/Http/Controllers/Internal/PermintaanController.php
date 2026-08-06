@@ -167,6 +167,10 @@ class PermintaanController extends Controller
             return redirect()->back()->with('error', 'File hasil belum tersedia.');
         }
 
+        if (!Auth::user()->can('upload-hasil')) {
+            abort(403, 'Anda tidak berwenang mengunduh file hasil.');
+        }
+
         return response()->download(storage_path('app/' . $permintaan->file_hasil_path));
     }
 
