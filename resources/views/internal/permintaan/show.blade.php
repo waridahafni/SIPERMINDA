@@ -13,7 +13,6 @@
                 'disetujui_kasi' => 'indigo',
                 'disetujui_kabid' => 'purple',
                 'ditolak' => 'red',
-                'menunggu_upload' => 'orange',
                 'data_siap' => 'green',
                 'selesai' => 'teal',
                 default => 'gray'
@@ -121,7 +120,7 @@
                     'diajukan' => 'staf',
                     'diverifikasi_staf' => 'kasi',
                     'disetujui_kasi' => 'kabid',
-                    'menunggu_upload' => 'upload',
+                    'disetujui_kabid' => 'upload',
                     default => null,
                 };
                 $bisaTindak = $tahap && !in_array($tahap, ['upload'])
@@ -169,6 +168,17 @@
                             @error('file_hasil') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition text-sm">Upload & Selesaikan</button>
+                    </form>
+                </div>
+            @endif
+
+            @if($permintaan->status === 'data_siap' && $user->can('upload-hasil'))
+                <div class="bg-white rounded-xl shadow-sm border p-6">
+                    <h2 class="font-semibold text-gray-800 mb-2">Penutupan Permintaan</h2>
+                    <p class="text-sm text-gray-500 mb-3">Tandai permintaan sebagai selesai setelah pemohon menerima data.</p>
+                    <form method="POST" action="{{ route('internal.permintaan.selesai', $permintaan) }}">
+                        @csrf
+                        <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded-lg font-semibold hover:bg-teal-700 transition text-sm">Tandai Selesai</button>
                     </form>
                 </div>
             @endif

@@ -49,7 +49,6 @@
                                         'disetujui_kasi' => 'indigo',
                                         'disetujui_kabid' => 'purple',
                                         'ditolak' => 'red',
-                                        'menunggu_upload' => 'orange',
                                         'data_siap' => 'green',
                                         'selesai' => 'teal',
                                         default => 'gray'

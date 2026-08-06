@@ -51,6 +51,7 @@ Route::prefix('internal')->middleware(['auth'])->name('internal.')->group(functi
     Route::get('/permintaan/{permintaan}', [InternalPermintaanController::class, 'show'])->name('permintaan.show');
     Route::post('/permintaan/{permintaan}/keputusan', [InternalPermintaanController::class, 'keputusan'])->name('permintaan.keputusan');
     Route::post('/permintaan/{permintaan}/upload', [InternalPermintaanController::class, 'storeUploadHasil'])->name('permintaan.upload');
+    Route::post('/permintaan/{permintaan}/selesai', [InternalPermintaanController::class, 'tandaiSelesai'])->name('permintaan.selesai');
     Route::get('/permintaan/{permintaan}/unduh', [InternalPermintaanController::class, 'unduhHasil'])->name('permintaan.unduh');
 
     // Katalog (staf & admin)

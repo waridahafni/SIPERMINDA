@@ -60,8 +60,7 @@ class PermintaanController extends Controller
             'diajukan' => 'staf',
             'diverifikasi_staf' => 'kasi',
             'disetujui_kasi' => 'kabid',
-            'disetujui_kabid' => 'kabid',
-            'menunggu_upload' => 'upload',
+            'disetujui_kabid' => 'upload',
             default => null,
         };
     }
@@ -92,7 +91,7 @@ class PermintaanController extends Controller
 
         $tahap = $this->tahapSaatIni($permintaan);
 
-        if (!$tahap || in_array($tahap, ['upload'])) {
+        if (!$tahap) {
             return redirect()->back()->with('error', 'Permintaan tidak dalam tahap approval.');
         }
 
@@ -105,7 +104,7 @@ class PermintaanController extends Controller
             ['staf', 'tolak'] => 'ditolak',
             ['kasi', 'setuju'] => 'disetujui_kasi',
             ['kasi', 'tolak'] => 'ditolak',
-            ['kabid', 'setuju'] => 'menunggu_upload',
+            ['kabid', 'setuju'] => 'disetujui_kabid',
             ['kabid', 'tolak'] => 'ditolak',
             default => 'ditolak',
         };
@@ -131,7 +130,7 @@ class PermintaanController extends Controller
     }
 
     /**
-     * Upload file hasil untuk permintaan yang sudah disetujui final.
+     * Upload file hasil untuk permintaan yang sudah disetujui final (kabid).
      */
     public function storeUploadHasil(Request $request, PermintaanData $permintaan)
     {
@@ -141,6 +140,10 @@ class PermintaanController extends Controller
 
         if (!$this->otoritasTahap('upload')) {
             abort(403, 'Anda tidak berhak mengupload file hasil.');
+        }
+
+        if ($permintaan->status !== 'disetujui_kabid') {
+            return redirect()->back()->with('error', 'Permintaan belum disetujui final oleh kabid.');
         }
 
         $file = $request->file('file_hasil');
@@ -156,6 +159,24 @@ class PermintaanController extends Controller
         $this->kirimNotifikasi($permintaan, 'data_siap');
 
         return redirect()->route('internal.permintaan.index')->with('success', 'File hasil berhasil diupload, data siap diunduh.');
+    }
+
+    /**
+     * Menandai permintaan sebagai selesai setelah data siap diunduh.
+     */
+    public function tandaiSelesai(PermintaanData $permintaan)
+    {
+        if (!$this->otoritasTahap('upload')) {
+            abort(403, 'Anda tidak berwenang melakukan aksi ini.');
+        }
+
+        if (!in_array($permintaan->status, ['data_siap', 'selesai'])) {
+            return redirect()->back()->with('error', 'Permintaan belum dalam kondisi data siap.');
+        }
+
+        $permintaan->update(['status' => 'selesai']);
+
+        return redirect()->route('internal.permintaan.index')->with('success', 'Permintaan ditandai selesai.');
     }
 
     /**

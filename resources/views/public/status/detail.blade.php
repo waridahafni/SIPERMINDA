@@ -15,7 +15,6 @@
                         @case('disetujui_kasi') bg-indigo-100 text-indigo-800 @break
                         @case('disetujui_kabid') bg-purple-100 text-purple-800 @break
                         @case('ditolak') bg-red-100 text-red-800 @break
-                        @case('menunggu_upload') bg-orange-100 text-orange-800 @break
                         @case('data_siap') bg-green-100 text-green-800 @break
                         @case('selesai') bg-teal-100 text-teal-800 @break
                         @default bg-gray-100 text-gray-800
@@ -120,10 +119,18 @@
 
         @if(in_array($permintaan->status, ['data_siap', 'selesai']) && $permintaan->file_hasil_path)
             <div class="mt-8 text-center">
-                <a href="{{ route('permintaan.unduh', $permintaan) }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition shadow">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Unduh Data
-                </a>
+                @if(session('pemohon_otp') === $permintaan->pemohon->no_hp)
+                    <a href="{{ route('permintaan.unduh', $permintaan) }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition shadow">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Unduh Data
+                    </a>
+                @else
+                    <p class="text-sm text-gray-500 mb-3">Data Anda sudah siap diunduh. Verifikasi nomor HP Anda terlebih dahulu untuk mengunduh file.</p>
+                    <a href="{{ route('otp.form') }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition shadow">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Verifikasi & Unduh
+                    </a>
+                @endif
             </div>
         @endif
     </div>
