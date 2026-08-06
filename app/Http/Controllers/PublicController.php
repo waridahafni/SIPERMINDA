@@ -7,6 +7,7 @@ use App\Models\KategoriData;
 use App\Models\PermintaanData;
 use App\Models\UnduhanLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PublicController extends Controller
 {
@@ -17,6 +18,11 @@ class PublicController extends Controller
         $totalSelesai = PermintaanData::whereIn('status', ['data_siap', 'selesai'])->count();
 
         return view('public.beranda', compact('totalDataset', 'totalPermintaan', 'totalSelesai'));
+    }
+
+    public function alur()
+    {
+        return view('public.alur');
     }
 
     public function katalog(Request $request)
@@ -51,13 +57,17 @@ class PublicController extends Controller
 
     public function unduhDataset(DatasetTerbuka $dataset)
     {
+        if (!Storage::disk('local')->exists($dataset->file_path)) {
+            abort(404, 'File dataset tidak ditemukan di penyimpanan.');
+        }
+
         UnduhanLog::create([
             'dataset_terbuka_id' => $dataset->id,
             'ip_address' => request()->ip(),
             'downloaded_at' => now(),
         ]);
 
-        return response()->download(storage_path('app/' . $dataset->file_path));
+        return response()->download(Storage::disk('local')->path($dataset->file_path));
     }
 
     public function cekStatus()

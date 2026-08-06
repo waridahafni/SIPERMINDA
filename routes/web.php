@@ -14,6 +14,7 @@ use App\Http\Controllers\Internal\LaporanController;
 
 // Public
 Route::get('/', [PublicController::class, 'index'])->name('beranda');
+Route::get('/alur', [PublicController::class, 'alur'])->name('alur');
 Route::get('/katalog', [PublicController::class, 'katalog'])->name('katalog.index');
 Route::get('/katalog/{dataset}', [PublicController::class, 'detailDataset'])->name('katalog.detail');
 Route::get('/katalog/{dataset}/unduh', [PublicController::class, 'unduhDataset'])->name('katalog.unduh');

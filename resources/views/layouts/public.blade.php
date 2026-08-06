@@ -35,9 +35,11 @@
                 </div>
                 <div class="hidden md:flex items-center gap-6 text-sm font-medium">
                     <a href="{{ route('beranda') }}" class="hover:text-primary-200 transition">Beranda</a>
+                    <a href="{{ route('alur') }}" class="hover:text-primary-200 transition">Alur Permintaan</a>
                     <a href="{{ route('katalog.index') }}" class="hover:text-primary-200 transition">Katalog Data</a>
                     <a href="{{ route('permintaan.create') }}" class="hover:text-primary-200 transition">Permintaan Data</a>
                     <a href="{{ route('cek-status') }}" class="hover:text-primary-200 transition">Cek Status</a>
+                    <a href="{{ route('internal.login') }}" class="bg-white text-primary-600 font-semibold px-3 py-1.5 rounded hover:bg-primary-100 transition">Login Petugas</a>
                     @if(session('pemohon_id'))
                         <span class="text-primary-200">|</span>
                         <span class="text-white font-semibold">{{ session('pemohon_nama') }}</span>
@@ -51,9 +53,11 @@
         </div>
         <div x-show="mobileMenu" x-cloak class="md:hidden bg-primary-600 px-4 py-3 space-y-2 text-sm">
             <a href="{{ route('beranda') }}" class="block py-1 hover:text-primary-200">Beranda</a>
+            <a href="{{ route('alur') }}" class="block py-1 hover:text-primary-200">Alur Permintaan</a>
             <a href="{{ route('katalog.index') }}" class="block py-1 hover:text-primary-200">Katalog Data</a>
             <a href="{{ route('permintaan.create') }}" class="block py-1 hover:text-primary-200">Permintaan Data</a>
             <a href="{{ route('cek-status') }}" class="block py-1 hover:text-primary-200">Cek Status</a>
+            <a href="{{ route('internal.login') }}" class="bg-white text-primary-600 font-semibold px-3 py-1 rounded inline-block mt-1">Login Petugas</a>
             @if(session('pemohon_id'))
                 <hr class="border-primary-400">
                 <span class="block py-1 font-semibold">{{ session('pemohon_nama') }}</span>

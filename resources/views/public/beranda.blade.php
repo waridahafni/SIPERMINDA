@@ -15,29 +15,37 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 -mt-10">
-        <div class="grid md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
                 <div class="w-14 h-14 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <h3 class="font-bold text-lg text-gray-800">Alur Permintaan Data</h3>
+                <p class="text-gray-500 text-sm mt-2 flex-1">Pahami langkah mudah mengajukan permintaan hingga data diterima.</p>
+                <a href="{{ route('alur') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Lihat Alur &rarr;</a>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
+                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 </div>
                 <h3 class="font-bold text-lg text-gray-800">Katalog Data Terbuka</h3>
-                <p class="text-gray-500 text-sm mt-2">Jelajahi berbagai dataset statistik yang tersedia untuk diunduh.</p>
+                <p class="text-gray-500 text-sm mt-2 flex-1">Jelajahi berbagai dataset statistik yang tersedia untuk diunduh.</p>
                 <a href="{{ route('katalog.index') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Lihat Katalog &rarr;</a>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition">
-                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
+                <div class="w-14 h-14 bg-secondary-100 text-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
                 <h3 class="font-bold text-lg text-gray-800">Ajukan Permintaan Data</h3>
-                <p class="text-gray-500 text-sm mt-2">Butuh data tertentu? Ajukan permintaan data statistik secara online.</p>
+                <p class="text-gray-500 text-sm mt-2 flex-1">Butuh data tertentu? Ajukan permintaan data statistik secara online.</p>
                 <a href="{{ route('permintaan.create') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Ajukan &rarr;</a>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
                 <div class="w-14 h-14 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 </div>
                 <h3 class="font-bold text-lg text-gray-800">Cek Status Permintaan</h3>
-                <p class="text-gray-500 text-sm mt-2">Pantau perkembangan permintaan data Anda secara real-time.</p>
+                <p class="text-gray-500 text-sm mt-2 flex-1">Pantau perkembangan permintaan data Anda secara real-time.</p>
                 <a href="{{ route('cek-status') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Cek Sekarang &rarr;</a>
             </div>
         </div>
