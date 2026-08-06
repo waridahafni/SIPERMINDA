@@ -83,7 +83,7 @@ class PublicController extends Controller
             return redirect()->back()->withErrors(['not_found' => 'Data permintaan tidak ditemukan.']);
         }
 
-        return redirect()->route('status.cek', ['nomor_tiket' => $permintaan->nomor_tiket, 'no_hp' => $request->no_hp])
+        return redirect()->route('status.cek', ['nomorTiket' => $permintaan->nomor_tiket, 'no_hp' => $request->no_hp])
             ->with('success', 'Permintaan ditemukan.');
     }
 }

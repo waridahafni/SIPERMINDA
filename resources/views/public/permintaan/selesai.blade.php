@@ -27,7 +27,7 @@
             </div>
 
             <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="{{ route('status.cek') }}" class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition">Cek Status</a>
+                <a href="{{ route('status.cek', ['nomorTiket' => $permintaan->nomor_tiket, 'no_hp' => session('pemohon_otp', session('otp_nomor'))]) }}" class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition">Cek Status</a>
                 <a href="{{ route('beranda') }}" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition">Kembali ke Beranda</a>
             </div>
         </div>

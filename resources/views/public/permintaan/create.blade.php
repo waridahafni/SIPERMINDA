@@ -36,11 +36,11 @@
                 <div class="grid md:grid-cols-2 gap-4 text-sm">
                     <div>
                         <span class="text-gray-500">Nama:</span>
-                        <span class="font-medium text-gray-800 ml-1">{{ session('pemohon_nama', $pemohon->nama ?? '-') }}</span>
+                        <span class="font-medium text-gray-800 ml-1">{{ session('pemohon_nama', 'Pemohon') }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500">No. HP:</span>
-                        <span class="font-medium text-gray-800 ml-1">{{ session('otp_nomor', $pemohon->no_hp ?? '-') }}</span>
+                        <span class="font-medium text-gray-800 ml-1">{{ session('otp_nomor', session('pemohon_otp')) }}</span>
                     </div>
                 </div>
             </div>
