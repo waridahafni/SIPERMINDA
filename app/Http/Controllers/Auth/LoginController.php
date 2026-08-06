@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -20,7 +21,14 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $key = 'login:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return redirect()->back()->with('error', "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik.");
+        }
+
+        if (Auth::attempt($credentials + ['is_active' => true], $request->boolean('remember'))) {
+            RateLimiter::clear($key);
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -32,6 +40,18 @@ class LoginController extends Controller
             return redirect()->route('internal.permintaan.index');
         }
 
+        RateLimiter::hit($key, 60);
+
         return redirect()->back()->with('error', 'Email atau password salah.');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('internal.login')->with('success', 'Anda telah keluar.');
     }
 }
