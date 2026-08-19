@@ -11,18 +11,12 @@
     </div>
 
     <div class="max-w-3xl mx-auto px-4 py-8">
-        @if(!session('pemohon_id'))
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-6">
-                <p class="text-yellow-700 text-sm">Anda perlu melakukan verifikasi nomor HP terlebih dahulu sebelum mengajukan permintaan.</p>
-                <a href="{{ route('otp.form') }}" class="text-sm text-primary-500 font-semibold hover:underline mt-1 inline-block">Verifikasi Sekarang</a>
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('permintaan.store') }}" class="bg-white rounded-xl shadow-sm border p-8 space-y-6">
+        <form method="POST" action="{{ route('permintaan.store') }}" class="bg-white rounded-xl shadow-sm border p-5 sm:p-8 space-y-6">
             @csrf
 
             @if($errors->any())
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert" aria-labelledby="form-error-title">
+                    <p id="form-error-title" class="font-semibold text-sm">Periksa kembali data berikut:</p>
                     <ul class="list-disc list-inside text-sm">
                         @foreach($errors->all() as $err)
                             <li>{{ $err }}</li>
@@ -36,45 +30,53 @@
                 <div class="grid md:grid-cols-2 gap-4 text-sm">
                     <div>
                         <span class="text-gray-500">Nama:</span>
-                        <span class="font-medium text-gray-800 ml-1">{{ session('pemohon_nama', 'Pemohon') }}</span>
+                        <span class="font-medium text-gray-800 ml-1">{{ $pemohon->nama }}</span>
                     </div>
                     <div>
-                        <span class="text-gray-500">No. HP:</span>
-                        <span class="font-medium text-gray-800 ml-1">{{ session('otp_nomor', session('pemohon_otp')) }}</span>
+                        <span class="text-gray-500">Nomor WhatsApp:</span>
+                        <span class="font-medium text-gray-800 ml-1">{{ $pemohon->no_hp }}</span>
                     </div>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Data <span class="text-red-500">*</span></label>
-                <input type="text" name="jenis_data" value="{{ old('jenis_data') }}" required placeholder="Contoh: Data Penduduk, Data Ekonomi, dll."
+                <label for="jenis_data" class="block text-sm font-medium text-gray-700 mb-1">Jenis Data <span class="text-red-500" aria-hidden="true">*</span><span class="sr-only"> (wajib)</span></label>
+                <input id="jenis_data" type="text" name="jenis_data" value="{{ old('jenis_data') }}" required placeholder="Contoh: Data Penduduk, Data Ekonomi, dll."
+                    @error('jenis_data') aria-invalid="true" aria-describedby="jenis_data-error" @enderror
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
+                @error('jenis_data') <p id="jenis_data-error" class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tujuan Penggunaan <span class="text-red-500">*</span></label>
-                <textarea name="tujuan_penggunaan" rows="4" required placeholder="Jelaskan tujuan penggunaan data yang diminta..."
+                <label for="tujuan_penggunaan" class="block text-sm font-medium text-gray-700 mb-1">Tujuan Penggunaan <span class="text-red-500" aria-hidden="true">*</span><span class="sr-only"> (wajib)</span></label>
+                <textarea id="tujuan_penggunaan" name="tujuan_penggunaan" rows="4" required placeholder="Jelaskan tujuan penggunaan data yang diminta..."
+                    @error('tujuan_penggunaan') aria-invalid="true" aria-describedby="tujuan_penggunaan-error" @enderror
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">{{ old('tujuan_penggunaan') }}</textarea>
+                @error('tujuan_penggunaan') <p id="tujuan_penggunaan-error" class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Periode Data <span class="text-red-500">*</span></label>
-                    <input type="text" name="periode_data" value="{{ old('periode_data') }}" required placeholder="Contoh: 2023-2024"
+                    <label for="periode_data" class="block text-sm font-medium text-gray-700 mb-1">Periode Data <span class="text-red-500" aria-hidden="true">*</span><span class="sr-only"> (wajib)</span></label>
+                    <input id="periode_data" type="text" name="periode_data" value="{{ old('periode_data') }}" required placeholder="Contoh: 2023-2024"
+                        @error('periode_data') aria-invalid="true" aria-describedby="periode_data-error" @enderror
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
+                    @error('periode_data') <p id="periode_data-error" class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                    <select name="kategori_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
+                    <label for="kategori_id" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                    <select id="kategori_id" name="kategori_id" @error('kategori_id') aria-invalid="true" aria-describedby="kategori_id-error" @enderror
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
                         <option value="">Pilih Kategori</option>
                         @foreach($kategori as $kat)
                             <option value="{{ $kat->id }}" {{ old('kategori_id') == $kat->id ? 'selected' : '' }}>{{ $kat->nama }}</option>
                         @endforeach
                     </select>
+                    @error('kategori_id') <p id="kategori_id-error" class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition shadow">Ajukan Permintaan</button>
+            <button type="submit" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition shadow">Ajukan Permintaan</button>
         </form>
     </div>
 @endsection

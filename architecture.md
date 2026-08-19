@@ -98,6 +98,10 @@ Beberapa layer di bawah tidak sepenuhnya tersedia di shared hosting cPanel (misa
 - **Pemohon publik/instansi**: OTP nomor HP (tanpa password)
 - **Internal (staf/kasi/kabid/admin)**: email + password (Laravel default auth, bcrypt)
 - **Otorisasi**: Laravel Policies + `spatie/laravel-permission` berbasis role (lihat 8.8)
+- Halaman **Daftar Pemohon** mengumpulkan profil dan nomor WhatsApp, sedangkan **Masuk Pemohon** hanya meminta nomor WhatsApp. Keduanya memakai mesin OTP dan pembatasan per nomor yang sama.
+- Keberadaan akun baru diperiksa setelah OTP valid. Nomor baru dari alur Masuk diberi bukti verifikasi singkat untuk melengkapi profil tanpa OTP kedua sehingga endpoint awal tidak menjadi sarana enumerasi akun.
+- `pemohon_id` dalam session menjadi identitas publik yang otoritatif. Middleware selalu memuat ulang model terverifikasi dan controller membatasi permintaan/unduhan melalui relasi kepemilikan pemohon tersebut.
+- ID session dirotasi setelah autentikasi dan saat keluar. Logout pemohon memakai `POST` + CSRF dan tidak mengakhiri guard internal petugas.
 
 ### 8.5 Hosting & Deployment
 - Shared hosting cPanel (DomaiNesia)

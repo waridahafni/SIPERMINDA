@@ -75,7 +75,7 @@ class HardeningKeamananTest extends TestCase
 
     public function test_otp_hash_yang_valid_dapat_diverifikasi(): void
     {
-        OtpVerification::create([
+        $otp = OtpVerification::create([
             'no_hp' => '6281234567890',
             'kode_otp' => Hash::make('123456'),
             'expired_at' => now()->addMinutes(5),
@@ -84,6 +84,8 @@ class HardeningKeamananTest extends TestCase
         ]);
 
         $this->withSession([
+            'otp_mode' => 'daftar',
+            'otp_verification_id' => $otp->id,
             'otp_pemohon' => [
                 'no_hp' => '6281234567890',
                 'nama' => 'Pemohon Test',
@@ -254,8 +256,10 @@ class HardeningKeamananTest extends TestCase
         ]);
 
         $this->withSession([
+            'otp_mode' => 'daftar',
+            'otp_verification_id' => $otp->id,
             'otp_pemohon' => ['no_hp' => '6281234567897'],
-        ])->post('/otp/verifikasi', [
+        ])->from(route('otp.form'))->post('/otp/verifikasi', [
             'no_hp' => '081234567896',
             'kode_otp' => '123456',
         ])->assertRedirect(route('otp.form'))
@@ -295,7 +299,7 @@ class HardeningKeamananTest extends TestCase
         ]);
         Storage::disk('local')->put($permintaanLama->file_hasil_path, 'hasil lama');
 
-        OtpVerification::create([
+        $otp = OtpVerification::create([
             'no_hp' => '6281234567898',
             'kode_otp' => Hash::make('123456'),
             'expired_at' => now()->addMinutes(5),
@@ -304,6 +308,8 @@ class HardeningKeamananTest extends TestCase
         ]);
 
         $this->withSession([
+            'otp_mode' => 'daftar',
+            'otp_verification_id' => $otp->id,
             'otp_pemohon' => [
                 'no_hp' => '6281234567898',
                 'nama' => 'Pemohon Lama',
@@ -350,6 +356,8 @@ class HardeningKeamananTest extends TestCase
         ]);
 
         $this->withSession([
+            'otp_mode' => 'daftar',
+            'otp_verification_id' => $otp->id,
             'otp_pemohon' => [
                 'no_hp' => '6281234567897',
                 'nama' => 'Pemohon Duplikat',
@@ -391,6 +399,14 @@ class HardeningKeamananTest extends TestCase
             'Pemohon Kirim Ulang',
             ['email' => 'ulang@example.com'],
         ))->assertSessionHas('success');
+
+        $this->post('/otp/kirim-ulang')
+            ->assertSessionHas('error', fn (string $pesan): bool => str_contains($pesan, 'Tunggu'));
+
+        Http::assertSentCount(1);
+        $this->assertDatabaseCount('otp_verifications', 1);
+
+        $this->travel(61)->seconds();
 
         $this->post('/otp/kirim-ulang')->assertSessionHas('success');
 

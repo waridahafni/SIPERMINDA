@@ -12,15 +12,43 @@ class PemohonOtpMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $pemohonId = $request->session()->get('pemohon_id');
-        $noHp = $request->session()->get('pemohon_otp');
+        $pemohon = (is_int($pemohonId) || (is_string($pemohonId) && ctype_digit($pemohonId)))
+            ? Pemohon::whereKey((int) $pemohonId)
+                ->whereNotNull('no_hp_verified_at')
+                ->first()
+            : null;
 
-        $pemohon = $pemohonId ? Pemohon::whereKey($pemohonId)->first() : null;
+        if (! $pemohon) {
+            $request->session()->forget([
+                'pemohon_id',
+                'pemohon_otp',
+                'pemohon_nama',
+                'otp_nomor',
+            ]);
 
-        if (! $pemohon
-            || $pemohon->no_hp !== $noHp
-            || ! $pemohon->no_hp_verified_at) {
-            return redirect()->route('otp.form')->with('error', 'Silakan verifikasi nomor HP terlebih dahulu.');
+            if (in_array($request->getMethod(), ['GET', 'HEAD'], true)) {
+                // Simpan URI relatif, bukan fullUrl(), agar Host header tidak
+                // dapat mengubah intended redirect menjadi domain eksternal.
+                $tujuan = '/'.ltrim($request->getPathInfo(), '/');
+                $query = $request->getQueryString();
+
+                if (is_string($query) && $query !== '') {
+                    $tujuan .= '?'.$query;
+                }
+
+                $request->session()->put('url.intended', $tujuan);
+            }
+
+            return redirect()->route('pemohon.masuk')
+                ->with('error', 'Silakan masuk sebagai pemohon terlebih dahulu.');
         }
+
+        $request->session()->put([
+            'pemohon_otp' => $pemohon->no_hp,
+            'pemohon_nama' => $pemohon->nama,
+            'otp_nomor' => $pemohon->no_hp,
+        ]);
+        $request->attributes->set('pemohon', $pemohon);
 
         return $next($request);
     }

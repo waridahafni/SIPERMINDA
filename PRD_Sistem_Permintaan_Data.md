@@ -48,6 +48,15 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - Pemohon dapat mengecek status permintaan menggunakan nomor tiket + nomor HP
 - Status: Diajukan → Diverifikasi Staf → Disetujui Kasi → Disetujui Kabid → Data Siap Diunduh → Selesai / Ditolak
 
+### 4.4 Akun Pemohon Publik (Tambahan 19 Agustus 2026)
+
+1. Pemohon baru memilih **Daftar**, mengisi profil dan nomor WhatsApp, lalu memverifikasi OTP.
+2. Setelah OTP valid, data pemohon dibuat dan sesi login publik diaktifkan.
+3. Pemohon yang sudah terdaftar memilih **Masuk**, memasukkan nomor WhatsApp, lalu memverifikasi OTP tanpa password.
+4. Pemohon dapat **Keluar** untuk mengakhiri sesi publik.
+5. Setelah masuk, pemohon dapat mengajukan permintaan dan mengunduh hasil miliknya tanpa mengisi ulang profil.
+6. Halaman **Permintaan Saya** menampilkan riwayat pengajuan milik akun yang sedang aktif dan akses unduh ketika hasil tersedia.
+
 ## 5. Fitur & Modul
 
 ### 5.1 Modul Katalog Data Terbuka
@@ -78,6 +87,10 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - Autentikasi pemohon via nomor HP (OTP)
 - Autentikasi internal (staf/kasi/kabid/admin) via email/password
 - Role & permission (staf, kasi, kabid, admin)
+- Halaman Daftar dan Masuk pemohon dibuat terpisah agar alur pengguna luar jelas.
+- Akun pemohon menggunakan autentikasi passwordless melalui OTP WhatsApp; password hanya digunakan oleh pengguna internal.
+- Pendaftaran dengan nomor yang sudah tercatat memakai kembali identitas yang sama dan tidak membuat duplikat.
+- Sesi pemohon harus dirotasi setelah verifikasi berhasil dan saat Keluar.
 
 ## 6. Kebutuhan Non-Fungsional
 
@@ -128,3 +141,11 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - Metadata OTP kedaluwarsa disimpan maksimal 7 hari secara default lalu dipangkas oleh scheduler Laravel.
 - Respons API `2xx` diperlakukan sebagai pesan diterima Meta; pemantauan status delivery melalui webhook ditunda ke fase operasional berikutnya.
 - SMS sebagai kanal fallback ditunda sampai ada kebutuhan operasional dan persetujuan biaya.
+
+### 9.2 Keputusan Akun Pemohon Publik (19 Agustus 2026)
+
+- Akun pemohon tetap memakai entitas `pemohon`; tabel `users` dan autentikasi email/password hanya untuk petugas internal.
+- Pendaftaran dan masuk dipisahkan secara visual, tetapi berbagi OTP WhatsApp, rate limit, dan normalisasi nomor yang sama.
+- Keberadaan akun tidak diperiksa atau diungkap sebelum OTP valid. Nomor baru dari alur Masuk melengkapi profil setelah verifikasi tanpa OTP kedua.
+- Kepemilikan permintaan dan hasil unduhan ditentukan dari `pemohon_id` sesi yang tervalidasi, bukan dari nomor HP yang dikirim ulang oleh browser.
+- Logout pemohon memakai metode `POST`, membersihkan state OTP, dan merotasi session tanpa mengakhiri sesi petugas internal.

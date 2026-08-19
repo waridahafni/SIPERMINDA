@@ -24,6 +24,18 @@ SIPERMINDA adalah Sistem Permintaan Data BPS Kabupaten Padang Lawas. Aplikasi in
 3. Jalankan `composer install`, `php artisan key:generate`, `php artisan migrate --seed`, `npm install`, dan `npm run build`.
 4. Jalankan pengembangan lokal dengan `composer run dev`.
 
+### Akun pemohon publik
+
+Pemohon dari masyarakat atau instansi memakai akun tanpa password berbasis nomor WhatsApp:
+
+- Pemohon baru membuka `/daftar`, mengisi profil, lalu memverifikasi OTP WhatsApp.
+- Pemohon yang sudah terdaftar membuka `/masuk` dan cukup memasukkan nomor WhatsApp serta OTP.
+- Jika nomor yang belum terdaftar masuk dari halaman Masuk, profil baru diminta setelah nomor berhasil diverifikasi. Sistem tidak mengungkap keberadaan akun sebelum OTP valid.
+- Setelah masuk, pemohon dapat membuka `/akun/permintaan` untuk melihat permintaan miliknya, mengajukan permintaan baru, dan mengunduh hasil yang sudah tersedia.
+- Tombol Keluar mengakhiri sesi pemohon melalui request `POST`; akun internal petugas tetap menggunakan `/internal/login` dengan email dan password.
+
+Identitas publik tetap memakai tabel `pemohon`; tidak diperlukan password atau akun tambahan pada tabel `users`. Nomor disimpan dalam format kanonis `628...`, sementara format `08...`, `62...`, dan `+62...` tetap diterima saat input.
+
 ### OTP WhatsApp
 
 Pada environment `local`, gunakan `OTP_DRIVER=log` agar OTP hanya ditulis ke log lokal. Driver ini otomatis ditolak pada production.

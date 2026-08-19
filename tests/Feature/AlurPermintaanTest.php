@@ -63,7 +63,7 @@ class AlurPermintaanTest extends TestCase
 
     public function test_permintaan_tidak_bisa_diajukan_tanpa_verifikasi_otp(): void
     {
-        $this->get('/permintaan/create')->assertRedirect(route('otp.form'));
+        $this->get('/permintaan/create')->assertRedirect(route('pemohon.masuk'));
     }
 
     public function test_cek_status_membutuhkan_tiket_dan_no_hp_yang_cocok(): void

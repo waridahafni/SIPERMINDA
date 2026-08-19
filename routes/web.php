@@ -22,13 +22,23 @@ Route::get('/cek-status', [PublicController::class, 'cekStatus'])->name('cek-sta
 Route::post('/cek-status', [PublicController::class, 'cekStatusPost'])->middleware('throttle:10,1')->name('cek-status.post');
 
 // OTP
+Route::get('/daftar', [OtpController::class, 'showDaftar'])->name('pemohon.daftar');
+Route::post('/daftar/kirim-otp', [OtpController::class, 'kirimOtp'])->middleware('throttle:10,1')->name('pemohon.daftar.kirim-otp');
+Route::get('/masuk', [OtpController::class, 'showMasuk'])->name('pemohon.masuk');
+Route::post('/masuk/kirim-otp', [OtpController::class, 'kirimOtpMasuk'])->middleware('throttle:10,1')->name('pemohon.masuk.kirim-otp');
+Route::get('/daftar/lengkapi', [OtpController::class, 'showLengkapiPendaftaran'])->name('pemohon.daftar.lengkapi');
+Route::post('/daftar/lengkapi', [OtpController::class, 'lengkapiPendaftaran'])->middleware('throttle:10,1')->name('pemohon.daftar.lengkapi.simpan');
+Route::post('/keluar', [OtpController::class, 'keluar'])->name('pemohon.keluar');
 Route::get('/otp', [OtpController::class, 'showForm'])->name('otp.form');
+// Endpoint lama dipertahankan agar bookmark/form versi sebelumnya tetap bekerja.
 Route::post('/otp/kirim', [OtpController::class, 'kirimOtp'])->middleware('throttle:10,1')->name('otp.kirim');
 Route::post('/otp/kirim-ulang', [OtpController::class, 'kirimUlang'])->middleware('throttle:10,1')->name('otp.kirim-ulang');
 Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->middleware('throttle:20,1')->name('otp.verifikasi');
 
 // Permintaan Data (butuh OTP)
 Route::middleware(['pemohon.otp'])->group(function () {
+    Route::get('/akun/permintaan', [PermintaanController::class, 'indexPemohon'])->name('pemohon.permintaan.index');
+    Route::get('/akun/permintaan/{permintaan}', [PermintaanController::class, 'showPemohon'])->name('pemohon.permintaan.show');
     Route::get('/permintaan/create', [PermintaanController::class, 'create'])->name('permintaan.create');
     Route::post('/permintaan', [PermintaanController::class, 'store'])->name('permintaan.store');
     Route::get('/permintaan/{permintaan}/selesai', [PermintaanController::class, 'selesai'])->name('permintaan.selesai');

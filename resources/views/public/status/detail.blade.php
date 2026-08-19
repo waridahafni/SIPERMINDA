@@ -8,7 +8,7 @@
             <a href="{{ route('cek-status') }}" class="text-sm text-primary-500 hover:underline">&larr; Cek Status Lainnya</a>
             <div class="mt-4 flex items-center gap-4 flex-wrap">
                 <h1 class="text-2xl font-bold text-gray-800">Status Permintaan</h1>
-                <span class="text-xs font-bold px-3 py-1 rounded-full 
+                <span role="status" aria-label="Status permintaan: {{ str_replace('_', ' ', $permintaan->status) }}" class="text-xs font-bold px-3 py-1 rounded-full
                     @switch($permintaan->status)
                         @case('diajukan') bg-yellow-100 text-yellow-800 @break
                         @case('diverifikasi_staf') bg-blue-100 text-blue-800 @break
@@ -44,7 +44,6 @@
                 'kasi' => 'Persetujuan Kasi',
                 'kabid' => 'Persetujuan Kabid',
             ];
-            $semuaSelesai = $permintaan->status === 'data_siap' || $permintaan->status === 'selesai';
         @endphp
 
         <div class="space-y-0">
@@ -61,9 +60,9 @@
                             @elseif($isSelesai) bg-green-100 text-green-600
                             @else bg-gray-100 text-gray-400 @endif">
                             @if($isTolak)
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             @elseif($isSelesai)
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             @else
                                 {{ $loop->iteration }}
                             @endif
@@ -90,9 +89,9 @@
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
                         @if($dataSiap) bg-green-100 text-green-600 @else bg-gray-100 text-gray-400 @endif">
                         @if($dataSiap)
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg>
+                            <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg>
                         @else
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6"/></svg>
+                            <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6"/></svg>
                         @endif
                     </div>
                 </div>
@@ -118,18 +117,30 @@
         @endif
 
         @if(in_array($permintaan->status, ['data_siap', 'selesai']) && $permintaan->file_hasil_path)
+            @php
+                $pemohonAktifId = session('pemohon_id');
+                $akunPemilikAktif = $pemohonAktifId !== null
+                    && (string) $pemohonAktifId === (string) $permintaan->pemohon_id;
+            @endphp
             <div class="mt-8 text-center">
-                @if(session('pemohon_otp') === $permintaan->pemohon->no_hp)
-                    <a href="{{ route('permintaan.unduh', $permintaan) }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition shadow">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                @if($akunPemilikAktif)
+                    <p class="text-sm text-gray-600 mb-3">File hasil tersedia untuk akun pemohon Anda.</p>
+                    <a href="{{ route('permintaan.unduh', $permintaan) }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 transition shadow">
+                        <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Unduh Data
                     </a>
-                @else
-                    <p class="text-sm text-gray-500 mb-3">Data Anda sudah siap diunduh. Verifikasi nomor HP Anda terlebih dahulu untuk mengunduh file.</p>
-                    <a href="{{ route('otp.form') }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition shadow">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Verifikasi & Unduh
+                @elseif($pemohonAktifId === null)
+                    <p class="text-sm text-gray-600 mb-3">Data sudah siap. Masuk dengan akun pemohon yang mengajukan permintaan ini untuk mengunduhnya.</p>
+                    {{-- Tautan protected membuat middleware menyimpan URL unduhan sebagai tujuan setelah login. --}}
+                    <a href="{{ route('permintaan.unduh', $permintaan) }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 transition shadow">
+                        <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Masuk untuk Mengunduh
                     </a>
+                @else
+                    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4 text-sm" role="alert">
+                        Anda sedang masuk dengan akun pemohon yang berbeda. File hanya dapat diunduh oleh akun yang mengajukan permintaan ini.
+                    </div>
+                    <a href="{{ route('pemohon.permintaan.index') }}" class="inline-block mt-3 text-sm font-semibold text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">Lihat Permintaan Saya</a>
                 @endif
             </div>
         @endif

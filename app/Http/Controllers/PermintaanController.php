@@ -18,16 +18,41 @@ use Illuminate\Support\Str;
 
 class PermintaanController extends Controller
 {
-    public function create()
+    public function indexPemohon(Request $request)
+    {
+        $pemohon = $this->pemohonAktif($request);
+        $permintaan = $pemohon->permintaanData()
+            ->with('kategori')
+            ->latest()
+            ->paginate(10);
+
+        return view('public.akun.permintaan', compact('pemohon', 'permintaan'));
+    }
+
+    public function showPemohon(PermintaanData $permintaan, Request $request)
+    {
+        $pemohon = $this->pemohonAktif($request);
+
+        if ((int) $permintaan->pemohon_id !== (int) $pemohon->id) {
+            abort(404);
+        }
+
+        $permintaan->load(['pemohon', 'approvalLog.approver', 'kategori']);
+
+        return view('public.status.detail', compact('permintaan'));
+    }
+
+    public function create(Request $request)
     {
         $kategori = KategoriData::all();
+        $pemohon = $this->pemohonAktif($request);
 
-        return view('public.permintaan.create', compact('kategori'));
+        return view('public.permintaan.create', compact('kategori', 'pemohon'));
     }
 
     public function store(StorePermintaanRequest $request)
     {
-        $pemohon = Pemohon::where('no_hp', session('pemohon_otp'))->firstOrFail();
+        $pemohon = $this->pemohonAktif($request);
 
         $nomorTiket = DB::transaction(function () {
             $tahun = now()->year;
@@ -85,12 +110,12 @@ class PermintaanController extends Controller
         return redirect()->route('permintaan.selesai', $permintaan);
     }
 
-    public function selesai(PermintaanData $permintaan)
+    public function selesai(PermintaanData $permintaan, Request $request)
     {
-        $noHp = session('pemohon_otp');
+        $pemohon = $this->pemohonAktif($request);
 
-        if (! $noHp || ! $permintaan->pemohon || $permintaan->pemohon->no_hp !== $noHp) {
-            abort(403, 'Anda tidak berhak melihat halaman ini.');
+        if ((int) $permintaan->pemohon_id !== (int) $pemohon->id) {
+            abort(404);
         }
 
         return view('public.permintaan.selesai', compact('permintaan'));
@@ -98,10 +123,10 @@ class PermintaanController extends Controller
 
     public function unduhHasil(PermintaanData $permintaan, Request $request)
     {
-        $noHp = session('pemohon_otp');
+        $pemohon = $this->pemohonAktif($request);
 
-        if (! $noHp || $permintaan->pemohon->no_hp !== $noHp) {
-            return redirect()->back()->with('error', 'Anda tidak berhak mengunduh file ini.');
+        if ((int) $permintaan->pemohon_id !== (int) $pemohon->id) {
+            abort(404);
         }
 
         if (! $permintaan->file_hasil_path) {
@@ -127,5 +152,14 @@ class PermintaanController extends Controller
         $namaUnduhan = 'hasil-'.Str::slug($permintaan->nomor_tiket).'.'.$ekstensi;
 
         return response()->download(Storage::disk('local')->path($permintaan->file_hasil_path), $namaUnduhan);
+    }
+
+    private function pemohonAktif(Request $request): Pemohon
+    {
+        $pemohon = $request->attributes->get('pemohon');
+
+        abort_unless($pemohon instanceof Pemohon, 403, 'Sesi pemohon tidak valid.');
+
+        return $pemohon;
     }
 }

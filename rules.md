@@ -66,3 +66,13 @@ Dokumen ini merangkum aturan bisnis (business rules) yang berlaku dalam sistem, 
 | Kasi | Approval tahap 2, dapat menolak/meminta info tambahan |
 | Kabid | Approval final, dapat menolak/meminta info tambahan |
 | Admin | Kelola user & role, akses penuh ke seluruh data & laporan |
+
+## 10. Aturan Akun Pemohon Publik (Tambahan 19 Agustus 2026)
+
+- Pemohon mendaftar dan masuk tanpa password dengan OTP yang dikirim ke nomor WhatsApp.
+- Profil pemohon baru hanya dibuat setelah nomor WhatsApp berhasil diverifikasi.
+- Sistem tidak boleh memberi respons berbeda untuk nomor terdaftar dan belum terdaftar sebelum OTP valid.
+- Satu nomor WhatsApp kanonis hanya boleh terhubung ke satu identitas pemohon. Konflik data lama harus gagal tertutup dan ditinjau admin, bukan dipilih otomatis.
+- Pemohon yang sudah masuk hanya boleh melihat halaman selesai, riwayat, dan file hasil milik `pemohon_id` pada sesinya.
+- Cek status menggunakan nomor tiket dan nomor WhatsApp tetap tersedia tanpa login, tetapi unduhan hasil khusus tetap mewajibkan akun pemilik.
+- Keluar wajib menggunakan request `POST` dengan CSRF dan membersihkan seluruh state autentikasi serta challenge OTP pemohon.
