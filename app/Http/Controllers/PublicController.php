@@ -8,6 +8,7 @@ use App\Models\PermintaanData;
 use App\Models\UnduhanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PublicController extends Controller
 {
@@ -52,12 +53,16 @@ class PublicController extends Controller
 
     public function detailDataset(DatasetTerbuka $dataset)
     {
+        abort_unless($dataset->status === 'aktif', 404);
+
         return view('public.katalog.detail', compact('dataset'));
     }
 
     public function unduhDataset(DatasetTerbuka $dataset)
     {
-        if (!Storage::disk('local')->exists($dataset->file_path)) {
+        abort_unless($dataset->status === 'aktif', 404);
+
+        if (! Storage::disk('local')->exists($dataset->file_path)) {
             abort(404, 'File dataset tidak ditemukan di penyimpanan.');
         }
 
@@ -67,7 +72,10 @@ class PublicController extends Controller
             'downloaded_at' => now(),
         ]);
 
-        return response()->download(Storage::disk('local')->path($dataset->file_path));
+        $ekstensi = pathinfo($dataset->file_path, PATHINFO_EXTENSION);
+        $namaUnduhan = Str::slug($dataset->judul).'.'.$ekstensi;
+
+        return response()->download(Storage::disk('local')->path($dataset->file_path), $namaUnduhan);
     }
 
     public function cekStatus()
@@ -78,8 +86,8 @@ class PublicController extends Controller
     public function cekStatusPost(Request $request)
     {
         $request->validate([
-            'nomor_tiket' => 'required|string',
-            'no_hp' => 'required|string',
+            'nomor_tiket' => 'required|string|max:30',
+            'no_hp' => ['required', 'string', 'max:20', 'regex:/^(?:\+62|62|0)[0-9]{8,13}$/'],
         ]);
 
         $permintaan = PermintaanData::with('pemohon')
@@ -89,11 +97,13 @@ class PublicController extends Controller
             })
             ->first();
 
-        if (!$permintaan) {
+        if (! $permintaan) {
             return redirect()->back()->withErrors(['not_found' => 'Data permintaan tidak ditemukan.']);
         }
 
-        return redirect()->route('status.cek', ['nomorTiket' => $permintaan->nomor_tiket, 'no_hp' => $request->no_hp])
+        $request->session()->put("akses_status.{$permintaan->id}", now()->addMinutes(10)->timestamp);
+
+        return redirect()->route('status.cek', ['nomorTiket' => $permintaan->nomor_tiket])
             ->with('success', 'Permintaan ditemukan.');
     }
 }

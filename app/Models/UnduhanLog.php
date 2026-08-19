@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UnduhanLog extends Model
 {
     protected $table = 'unduhan_log';
+
     protected $guarded = ['id'];
 
     protected function casts(): array

@@ -7,6 +7,29 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## SIPERMINDA
+
+SIPERMINDA adalah Sistem Permintaan Data BPS Kabupaten Padang Lawas. Aplikasi ini menyediakan katalog data terbuka, pengajuan permintaan khusus, verifikasi OTP, approval berjenjang, serta laporan layanan.
+
+### Kebutuhan lokal
+
+- PHP 8.3 atau lebih baru beserta Composer
+- Node.js 20.19+ atau 22.12+ beserta npm
+- SQLite untuk pengembangan lokal dan test; MySQL/MariaDB direkomendasikan untuk production
+
+### Instalasi
+
+1. Salin `.env.example` menjadi `.env`, lalu isi koneksi database dan konfigurasi mail.
+2. Isi `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_EMAIL`, dan `INITIAL_ADMIN_PASSWORD`. Password awal harus minimal 12 karakter serta mengandung huruf besar, huruf kecil, dan angka.
+3. Jalankan `composer install`, `php artisan key:generate`, `php artisan migrate --seed`, `npm install`, dan `npm run build`.
+4. Jalankan pengembangan lokal dengan `composer run dev`.
+
+OTP hanya ditulis ke log pada environment `local`. Pada environment selain `local` dan `testing`, pengiriman OTP sengaja ditolak sampai provider SMS/WhatsApp pada PRD dipilih dan diintegrasikan. Jangan mengaktifkan aplikasi production sebelum integrasi tersebut selesai.
+
+### Pemeriksaan kualitas
+
+Jalankan `composer test`, `vendor/bin/pint --test`, dan `npm run build` sebelum melakukan deployment.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

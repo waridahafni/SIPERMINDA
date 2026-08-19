@@ -10,32 +10,30 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@bps.go.id',
-            'password' => Hash::make('password'),
-        ]);
+        $name = env('INITIAL_ADMIN_NAME');
+        $email = env('INITIAL_ADMIN_EMAIL');
+        $password = env('INITIAL_ADMIN_PASSWORD');
+
+        $passwordKuat = is_string($password)
+            && strlen($password) >= 12
+            && preg_match('/[a-z]/', $password)
+            && preg_match('/[A-Z]/', $password)
+            && preg_match('/[0-9]/', $password);
+
+        if (! $name || ! filter_var($email, FILTER_VALIDATE_EMAIL) || ! $passwordKuat) {
+            throw new \RuntimeException(
+                'Isi INITIAL_ADMIN_NAME, INITIAL_ADMIN_EMAIL yang valid, dan INITIAL_ADMIN_PASSWORD minimal 12 karakter dengan huruf besar, huruf kecil, serta angka sebelum menjalankan UserSeeder.'
+            );
+        }
+
+        $admin = User::firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $name,
+                'password' => Hash::make($password),
+            ]
+        );
+
         $admin->assignRole('admin');
-
-        $staf = User::create([
-            'name' => 'Staf',
-            'email' => 'staf@bps.go.id',
-            'password' => Hash::make('password'),
-        ]);
-        $staf->assignRole('staf');
-
-        $kasi = User::create([
-            'name' => 'Kasi',
-            'email' => 'kasi@bps.go.id',
-            'password' => Hash::make('password'),
-        ]);
-        $kasi->assignRole('kasi');
-
-        $kabid = User::create([
-            'name' => 'Kabid',
-            'email' => 'kabid@bps.go.id',
-            'password' => Hash::make('password'),
-        ]);
-        $kabid->assignRole('kabid');
     }
 }

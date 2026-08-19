@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Pemohon extends Model
 {
     protected $table = 'pemohon';
+
     protected $guarded = ['id'];
 
     protected function casts(): array

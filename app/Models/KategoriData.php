@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class KategoriData extends Model
 {
     protected $table = 'kategori_data';
+
     protected $guarded = ['id'];
 
     public function datasetTerbuka(): HasMany

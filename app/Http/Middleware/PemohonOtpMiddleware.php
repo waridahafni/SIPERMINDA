@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use App\Models\Pemohon;
+use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,9 +16,9 @@ class PemohonOtpMiddleware
 
         $pemohon = $pemohonId ? Pemohon::whereKey($pemohonId)->first() : null;
 
-        if (!$pemohon
+        if (! $pemohon
             || $pemohon->no_hp !== $noHp
-            || !$pemohon->no_hp_verified_at) {
+            || ! $pemohon->no_hp_verified_at) {
             return redirect()->route('otp.form')->with('error', 'Silakan verifikasi nomor HP terlebih dahulu.');
         }
 

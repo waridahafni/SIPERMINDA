@@ -16,11 +16,8 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $perBulan = PermintaanData::select(
-            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"),
-            DB::raw('count(*) as total')
-        )
-            ->groupBy('bulan')
+        $perBulan = PermintaanData::query()
+            ->jumlahPerBulan()
             ->orderBy('bulan')
             ->get();
 

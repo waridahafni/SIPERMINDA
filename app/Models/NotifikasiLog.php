@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class NotifikasiLog extends Model
 {
     protected $table = 'notifikasi_log';
+
     protected $guarded = ['id'];
 
     public $timestamps = false;

@@ -4,10 +4,15 @@ namespace Tests\Feature;
 
 use App\Models\KategoriData;
 use App\Models\Pemohon;
-use App\Models\PermintaanData;
 use App\Models\PermintaanApprovalLog;
+use App\Models\PermintaanData;
+use App\Models\User;
+use Database\Seeders\KategoriSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AlurPermintaanTest extends TestCase
@@ -18,8 +23,9 @@ class AlurPermintaanTest extends TestCase
     {
         parent::setUp();
         Mail::fake();
-        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
-        $this->seed(\Database\Seeders\KategoriSeeder::class);
+        Storage::fake('local');
+        $this->seed(RolePermissionSeeder::class);
+        $this->seed(KategoriSeeder::class);
     }
 
     private function registerPemohon(string $noHp = '081234567890', string $email = 'pemohon@example.com'): Pemohon
@@ -72,21 +78,31 @@ class AlurPermintaanTest extends TestCase
             'status' => 'diajukan',
         ]);
 
-        $this->get('/status/' . $permintaan->nomor_tiket . '?no_hp=' . $pemohon->no_hp)
+        $this->get('/status/'.$permintaan->nomor_tiket)
+            ->assertRedirect(route('cek-status'));
+
+        $response = $this->post('/cek-status', [
+            'nomor_tiket' => $permintaan->nomor_tiket,
+            'no_hp' => $pemohon->no_hp,
+        ])->assertRedirect();
+
+        $this->get($response->headers->get('Location'))
             ->assertOk()
             ->assertSee($permintaan->nomor_tiket);
 
-        $this->get('/status/' . $permintaan->nomor_tiket . '?no_hp=089999999999')
-            ->assertNotFound();
+        $this->post('/cek-status', [
+            'nomor_tiket' => $permintaan->nomor_tiket,
+            'no_hp' => '089999999999',
+        ])->assertSessionHasErrors('not_found');
     }
 
     public function test_alur_approval_berjenjang_staf_kasi_kabid_dan_upload(): void
     {
-        $staf = \App\Models\User::factory()->create();
+        $staf = User::factory()->create();
         $staf->assignRole('staf');
-        $kasi = \App\Models\User::factory()->create();
+        $kasi = User::factory()->create();
         $kasi->assignRole('kasi');
-        $kabid = \App\Models\User::factory()->create();
+        $kabid = User::factory()->create();
         $kabid->assignRole('kabid');
 
         $pemohon = $this->registerPemohon();
@@ -126,7 +142,7 @@ class AlurPermintaanTest extends TestCase
         $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'disetujui_kabid']);
 
         // Tahap 4: Staf upload hasil -> data siap.
-        $file = \Illuminate\Http\UploadedFile::fake()->create('hasil.xlsx', 100);
+        $file = UploadedFile::fake()->create('hasil.xlsx', 100);
         $this->actingAs($staf)->post("/internal/permintaan/{$permintaan->id}/upload", [
             'file_hasil' => $file,
         ])->assertRedirect(route('internal.permintaan.index'));
@@ -137,7 +153,7 @@ class AlurPermintaanTest extends TestCase
 
     public function test_user_tanpa_role_tidak_bisa_melakukan_approval(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $pemohon = $this->registerPemohon();
         $permintaan = PermintaanData::create([
             'nomor_tiket' => 'BPS/PD/2025/00003',
@@ -157,7 +173,7 @@ class AlurPermintaanTest extends TestCase
 
     public function test_penolakan_harus_mencantumkan_catatan(): void
     {
-        $staf = \App\Models\User::factory()->create();
+        $staf = User::factory()->create();
         $staf->assignRole('staf');
 
         $pemohon = $this->registerPemohon();
@@ -182,7 +198,7 @@ class AlurPermintaanTest extends TestCase
 
     public function test_timeline_approval_tercatat_di_log(): void
     {
-        $staf = \App\Models\User::factory()->create();
+        $staf = User::factory()->create();
         $staf->assignRole('staf');
 
         $pemohon = $this->registerPemohon();
@@ -210,7 +226,7 @@ class AlurPermintaanTest extends TestCase
 
     public function test_permintaan_data_siap_dapat_ditandai_selesai(): void
     {
-        $staf = \App\Models\User::factory()->create();
+        $staf = User::factory()->create();
         $staf->assignRole('staf');
 
         $pemohon = $this->registerPemohon();
@@ -232,7 +248,7 @@ class AlurPermintaanTest extends TestCase
 
     public function test_permintaan_belum_data_siap_tidak_bisa_ditandai_selesai(): void
     {
-        $staf = \App\Models\User::factory()->create();
+        $staf = User::factory()->create();
         $staf->assignRole('staf');
 
         $pemohon = $this->registerPemohon();

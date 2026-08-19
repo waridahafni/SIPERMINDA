@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
@@ -21,9 +22,10 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        $key = 'login:' . $request->ip();
+        $key = 'login:'.Str::lower($request->email).'|'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
+
             return redirect()->back()->with('error', "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik.");
         }
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DatasetTerbuka extends Model
 {
     protected $table = 'dataset_terbuka';
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -31,7 +32,7 @@ class DatasetTerbuka extends Model
 
     public function datasetInduk(): BelongsTo
     {
-        return $this->belongsTo(self::class);
+        return $this->belongsTo(self::class, 'dataset_induk_id');
     }
 
     public function revisi(): HasMany

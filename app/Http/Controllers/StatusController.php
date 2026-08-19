@@ -9,16 +9,20 @@ class StatusController extends Controller
 {
     public function cek(Request $request, string $nomorTiket)
     {
-        $request->validate([
-            'no_hp' => 'required|string',
-        ]);
-
-        $permintaan = PermintaanData::with(['pemohon', 'approvalLog.approver', 'kategori'])
+        $permintaan = PermintaanData::query()
             ->where('nomor_tiket', $nomorTiket)
-            ->whereHas('pemohon', function ($q) use ($request) {
-                $q->where('no_hp', $request->no_hp);
-            })
             ->firstOrFail();
+
+        $berlakuSampai = (int) $request->session()->get("akses_status.{$permintaan->id}", 0);
+
+        if ($berlakuSampai < now()->timestamp) {
+            $request->session()->forget("akses_status.{$permintaan->id}");
+
+            return redirect()->route('cek-status')
+                ->with('error', 'Masukkan kembali nomor tiket dan nomor HP untuk melihat status.');
+        }
+
+        $permintaan->load(['pemohon', 'approvalLog.approver', 'kategori']);
 
         return view('public.status.detail', compact('permintaan'));
     }

@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PublicController;
-use App\Http\Controllers\PermintaanController;
-use App\Http\Controllers\StatusController;
-use App\Http\Controllers\OtpController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Internal\DashboardController;
-use App\Http\Controllers\Internal\PermintaanController as InternalPermintaanController;
 use App\Http\Controllers\Internal\KatalogController as InternalKatalogController;
-use App\Http\Controllers\Internal\PenggunaController;
 use App\Http\Controllers\Internal\LaporanController;
+use App\Http\Controllers\Internal\PenggunaController;
+use App\Http\Controllers\Internal\PermintaanController as InternalPermintaanController;
+use App\Http\Controllers\OtpController;
+use App\Http\Controllers\PermintaanController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\StatusController;
+use Illuminate\Support\Facades\Route;
 
 // Public
 Route::get('/', [PublicController::class, 'index'])->name('beranda');
@@ -19,13 +19,13 @@ Route::get('/katalog', [PublicController::class, 'katalog'])->name('katalog.inde
 Route::get('/katalog/{dataset}', [PublicController::class, 'detailDataset'])->name('katalog.detail');
 Route::get('/katalog/{dataset}/unduh', [PublicController::class, 'unduhDataset'])->name('katalog.unduh');
 Route::get('/cek-status', [PublicController::class, 'cekStatus'])->name('cek-status');
-Route::post('/cek-status', [PublicController::class, 'cekStatusPost'])->name('cek-status.post');
+Route::post('/cek-status', [PublicController::class, 'cekStatusPost'])->middleware('throttle:10,1')->name('cek-status.post');
 
 // OTP
 Route::get('/otp', [OtpController::class, 'showForm'])->name('otp.form');
-Route::post('/otp/kirim', [OtpController::class, 'kirimOtp'])->name('otp.kirim');
-Route::post('/otp/kirim-ulang', [OtpController::class, 'kirimUlang'])->name('otp.kirim-ulang');
-Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->name('otp.verifikasi');
+Route::post('/otp/kirim', [OtpController::class, 'kirimOtp'])->middleware('throttle:10,1')->name('otp.kirim');
+Route::post('/otp/kirim-ulang', [OtpController::class, 'kirimUlang'])->middleware('throttle:10,1')->name('otp.kirim-ulang');
+Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->middleware('throttle:20,1')->name('otp.verifikasi');
 
 // Permintaan Data (butuh OTP)
 Route::middleware(['pemohon.otp'])->group(function () {
@@ -45,15 +45,17 @@ Route::post('/internal/logout', [LoginController::class, 'logout'])->name('inter
 
 // Internal (butuh auth)
 Route::prefix('internal')->middleware(['auth'])->name('internal.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:lihat-dashboard')->name('dashboard');
 
     // Permintaan
-    Route::get('/permintaan', [InternalPermintaanController::class, 'index'])->name('permintaan.index');
-    Route::get('/permintaan/{permintaan}', [InternalPermintaanController::class, 'show'])->name('permintaan.show');
-    Route::post('/permintaan/{permintaan}/keputusan', [InternalPermintaanController::class, 'keputusan'])->name('permintaan.keputusan');
-    Route::post('/permintaan/{permintaan}/upload', [InternalPermintaanController::class, 'storeUploadHasil'])->name('permintaan.upload');
-    Route::post('/permintaan/{permintaan}/selesai', [InternalPermintaanController::class, 'tandaiSelesai'])->name('permintaan.selesai');
-    Route::get('/permintaan/{permintaan}/unduh', [InternalPermintaanController::class, 'unduhHasil'])->name('permintaan.unduh');
+    Route::middleware('permission:lihat-permintaan')->group(function () {
+        Route::get('/permintaan', [InternalPermintaanController::class, 'index'])->name('permintaan.index');
+        Route::get('/permintaan/{permintaan}', [InternalPermintaanController::class, 'show'])->name('permintaan.show');
+        Route::post('/permintaan/{permintaan}/keputusan', [InternalPermintaanController::class, 'keputusan'])->name('permintaan.keputusan');
+        Route::post('/permintaan/{permintaan}/upload', [InternalPermintaanController::class, 'storeUploadHasil'])->name('permintaan.upload');
+        Route::post('/permintaan/{permintaan}/selesai', [InternalPermintaanController::class, 'tandaiSelesai'])->name('permintaan.selesai');
+        Route::get('/permintaan/{permintaan}/unduh', [InternalPermintaanController::class, 'unduhHasil'])->name('permintaan.unduh');
+    });
 
     // Katalog (staf & admin)
     Route::middleware('permission:upload-dataset')->group(function () {
@@ -63,7 +65,6 @@ Route::prefix('internal')->middleware(['auth'])->name('internal.')->group(functi
         Route::get('/katalog/{dataset}/edit', [InternalKatalogController::class, 'edit'])->name('katalog.edit');
         Route::put('/katalog/{dataset}', [InternalKatalogController::class, 'update'])->name('katalog.update');
         Route::post('/katalog/{dataset}/revisi', [InternalKatalogController::class, 'revisi'])->name('katalog.revisi');
-        Route::delete('/katalog/{dataset}', [InternalKatalogController::class, 'destroy'])->name('katalog.destroy');
     });
 
     // Laporan (kasi/kabid/admin)

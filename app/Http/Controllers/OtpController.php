@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OtpVerification;
 use App\Models\Pemohon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -32,23 +33,34 @@ class OtpController extends Controller
     public function kirimOtp(Request $request)
     {
         $request->validate([
-            'no_hp' => 'required|string|max:20',
+            'no_hp' => ['required', 'string', 'max:20', 'regex:/^(?:\+62|62|0)[0-9]{8,13}$/'],
         ]);
 
         $noHp = $request->no_hp;
 
+        if (! app()->environment('local', 'testing')) {
+            Log::warning('Pengiriman OTP dibatalkan karena provider SMS/WA belum dikonfigurasi.');
+
+            return redirect()->back()->with('error', 'Layanan OTP belum dikonfigurasi. Silakan hubungi administrator.');
+        }
+
         // Rate limit: maksimal 3x pengiriman per nomor HP per 10 menit.
-        $key = 'otp-kirim:' . $noHp;
+        $key = 'otp-kirim:'.$noHp;
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
+
             return redirect()->back()->with('error', "Terlalu banyak permintaan OTP. Coba lagi dalam {$seconds} detik.");
         }
 
         $kode = $this->generateKode();
 
+        OtpVerification::where('no_hp', $noHp)
+            ->whereNull('verified_at')
+            ->update(['expired_at' => now()]);
+
         OtpVerification::create([
             'no_hp' => $noHp,
-            'kode_otp' => $kode,
+            'kode_otp' => Hash::make($kode),
             'expired_at' => now()->addMinutes(5),
             'attempt_count' => 0,
             'created_at' => now(),
@@ -71,8 +83,6 @@ class OtpController extends Controller
         // karena OTP tidak boleh terekspos ke log di lingkungan production.
         if (app()->environment('local')) {
             Log::info("OTP untuk {$noHp} dikirim (mode local): {$kode}");
-        } else {
-            // TODO: konfirmasi provider SMS/WA gateway (lihat PRD bagian 9).
         }
 
         return redirect()->route('otp.form')->with('otp_kirim', true)->with('otp_nomor', $noHp)
@@ -87,7 +97,7 @@ class OtpController extends Controller
         $noHp = $request->session()->get('otp_pemohon.no_hp')
             ?? $request->session()->get('otp_nomor');
 
-        if (!$noHp) {
+        if (! $noHp) {
             return redirect()->route('otp.form')->with('error', 'Silakan masukkan nomor HP terlebih dahulu.');
         }
 
@@ -102,8 +112,8 @@ class OtpController extends Controller
     public function verifikasiOtp(Request $request)
     {
         $request->validate([
-            'no_hp' => 'required|string|max:20',
-            'kode_otp' => 'required|string|size:6',
+            'no_hp' => ['required', 'string', 'max:20', 'regex:/^(?:\+62|62|0)[0-9]{8,13}$/'],
+            'kode_otp' => ['required', 'digits:6'],
         ]);
 
         $otp = OtpVerification::where('no_hp', $request->no_hp)
@@ -117,7 +127,7 @@ class OtpController extends Controller
             return redirect()->back()->with('error', 'Terlalu banyak percobaan. Silakan kirim ulang OTP.');
         }
 
-        if (!$otp || !hash_equals($otp->kode_otp, $request->kode_otp)) {
+        if (! $otp || ! Hash::check($request->kode_otp, $otp->kode_otp)) {
             // Catat percobaan gagal pada record OTP terbaru yang masih berlaku.
             $latestActive = OtpVerification::where('no_hp', $request->no_hp)
                 ->whereNull('verified_at')

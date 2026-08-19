@@ -12,13 +12,16 @@ use App\Models\UnduhanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PermintaanController extends Controller
 {
     public function create()
     {
         $kategori = KategoriData::all();
+
         return view('public.permintaan.create', compact('kategori'));
     }
 
@@ -52,7 +55,7 @@ class PermintaanController extends Controller
 
         if ($pemohon->email) {
             try {
-                \Illuminate\Support\Facades\Mail::raw(
+                Mail::raw(
                     "Permintaan data Anda telah diterima.\nNomor Tiket: {$permintaan->nomor_tiket}\nSilakan cek status secara berkala.",
                     function ($message) use ($pemohon) {
                         $message->to($pemohon->email)
@@ -68,7 +71,7 @@ class PermintaanController extends Controller
                     'sent_at' => now(),
                 ]);
             } catch (\Exception $e) {
-                Log::warning('Gagal kirim email: ' . $e->getMessage());
+                Log::warning('Gagal kirim email: '.$e->getMessage());
 
                 NotifikasiLog::create([
                     'permintaan_data_id' => $permintaan->id,
@@ -86,7 +89,7 @@ class PermintaanController extends Controller
     {
         $noHp = session('pemohon_otp');
 
-        if (!$noHp || !$permintaan->pemohon || $permintaan->pemohon->no_hp !== $noHp) {
+        if (! $noHp || ! $permintaan->pemohon || $permintaan->pemohon->no_hp !== $noHp) {
             abort(403, 'Anda tidak berhak melihat halaman ini.');
         }
 
@@ -97,15 +100,19 @@ class PermintaanController extends Controller
     {
         $noHp = session('pemohon_otp');
 
-        if (!$noHp || $permintaan->pemohon->no_hp !== $noHp) {
+        if (! $noHp || $permintaan->pemohon->no_hp !== $noHp) {
             return redirect()->back()->with('error', 'Anda tidak berhak mengunduh file ini.');
         }
 
-        if (!$permintaan->file_hasil_path) {
+        if (! $permintaan->file_hasil_path) {
             return redirect()->back()->with('error', 'File hasil belum tersedia.');
         }
 
-        if (!Storage::disk('local')->exists($permintaan->file_hasil_path)) {
+        if (! in_array($permintaan->status, ['data_siap', 'selesai'], true)) {
+            return redirect()->back()->with('error', 'File hasil belum dapat diunduh.');
+        }
+
+        if (! Storage::disk('local')->exists($permintaan->file_hasil_path)) {
             return redirect()->back()->with('error', 'File hasil tidak ditemukan di penyimpanan.');
         }
 
@@ -116,6 +123,9 @@ class PermintaanController extends Controller
             'downloaded_at' => now(),
         ]);
 
-        return response()->download(Storage::disk('local')->path($permintaan->file_hasil_path));
+        $ekstensi = pathinfo($permintaan->file_hasil_path, PATHINFO_EXTENSION);
+        $namaUnduhan = 'hasil-'.Str::slug($permintaan->nomor_tiket).'.'.$ekstensi;
+
+        return response()->download(Storage::disk('local')->path($permintaan->file_hasil_path), $namaUnduhan);
     }
 }

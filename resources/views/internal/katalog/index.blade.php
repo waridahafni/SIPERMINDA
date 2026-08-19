@@ -42,7 +42,9 @@
                                 <div class="flex items-center justify-center gap-2 text-xs">
                                     <a href="{{ route('internal.katalog.edit', $ds) }}" class="text-primary-500 hover:underline font-medium">Edit</a>
                                     <a href="{{ route('internal.katalog.edit', $ds) }}?revisi=1" class="text-secondary-500 hover:underline font-medium">Revisi</a>
-                                    <a href="{{ route('katalog.detail', $ds) }}" class="text-gray-500 hover:underline font-medium">Lihat</a>
+                                    @if($ds->status === 'aktif')
+                                        <a href="{{ route('katalog.detail', $ds) }}" class="text-gray-500 hover:underline font-medium">Lihat</a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

@@ -35,11 +35,8 @@ class LaporanController extends Controller
         $totalUnduhan = UnduhanLog::count();
         $totalDataset = DatasetTerbuka::where('status', 'aktif')->count();
 
-        $rekapBulanan = PermintaanData::select(
-            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"),
-            DB::raw('count(*) as total')
-        )
-            ->groupBy('bulan')
+        $rekapBulanan = PermintaanData::query()
+            ->jumlahPerBulan()
             ->orderBy('bulan', 'desc')
             ->limit(12)
             ->get();
