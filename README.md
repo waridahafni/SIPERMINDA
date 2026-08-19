@@ -24,7 +24,21 @@ SIPERMINDA adalah Sistem Permintaan Data BPS Kabupaten Padang Lawas. Aplikasi in
 3. Jalankan `composer install`, `php artisan key:generate`, `php artisan migrate --seed`, `npm install`, dan `npm run build`.
 4. Jalankan pengembangan lokal dengan `composer run dev`.
 
-OTP hanya ditulis ke log pada environment `local`. Pada environment selain `local` dan `testing`, pengiriman OTP sengaja ditolak sampai provider SMS/WhatsApp pada PRD dipilih dan diintegrasikan. Jangan mengaktifkan aplikasi production sebelum integrasi tersebut selesai.
+### OTP WhatsApp
+
+Pada environment `local`, gunakan `OTP_DRIVER=log` agar OTP hanya ditulis ke log lokal. Driver ini otomatis ditolak pada production.
+
+Untuk mengaktifkan pengiriman nyata melalui Meta WhatsApp Cloud API:
+
+1. Siapkan WhatsApp Business Account, nomor pengirim, dan System User access token dengan izin `whatsapp_business_messaging` serta `whatsapp_business_management`.
+2. Buat template kategori **AUTHENTICATION** bernama `siperminda_kode_otp`, tambahkan rekomendasi keamanan, `code_expiration_minutes=5`, `message_send_ttl_seconds` maksimal 300 detik, serta tombol **COPY_CODE**, lalu tunggu statusnya `APPROVED`.
+3. Atur `OTP_DRIVER=whatsapp`, `OTP_EXPIRES_MINUTES=5`, dan isi `WHATSAPP_API_VERSION`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_OTP_TEMPLATE_NAME`, serta `WHATSAPP_OTP_TEMPLATE_LANGUAGE` pada `.env` production. Masa berlaku backend wajib sama dengan template dan dibatasi maksimal 5 menit oleh aplikasi.
+4. Jalankan `php artisan config:clear` atau bangun ulang cache konfigurasi setelah `.env` berubah.
+5. Aktifkan cron cPanel untuk menjalankan `php artisan schedule:run` setiap menit. Scheduler menghapus metadata OTP yang telah kedaluwarsa lebih dari `OTP_RETENTION_DAYS` (default 7 hari).
+
+Jangan menyimpan access token WhatsApp di Git atau mengirimkannya melalui chat; masukkan langsung ke `.env` production dan rotasi bila terpapar. Respons sukses dari Meta hanya berarti pesan diterima API, belum menjamin pesan sudah sampai ke perangkat. Webhook status delivery dapat ditambahkan pada fase operasional berikutnya. Aplikasi sengaja tidak melakukan retry otomatis agar timeout tidak menggandakan pesan berbayar.
+
+Referensi setup tersedia pada [contoh OTP resmi WhatsApp](https://github.com/WhatsApp/WhatsApp-OTP-Sample-App), [koleksi API resmi Meta](https://www.postman.com/meta/whatsapp-business-platform/overview), dan [contoh pembuatan template authentication resmi](https://www.postman.com/meta/whatsapp-business-platform/request/qzriq9r/create-authentication-template-w-otp-copy-code-button).
 
 ### Pemeriksaan kualitas
 

@@ -40,11 +40,13 @@ Skema database detail (MySQL/MariaDB), mengacu pada garis besar di PRD bagian 8.
 |---|---|---|
 | id | BIGINT, PK | |
 | no_hp | VARCHAR(20) | |
-| kode_otp | VARCHAR(6) | |
+| kode_otp | VARCHAR(255) | hash bcrypt; kode asli tidak disimpan |
 | expired_at | TIMESTAMP | |
 | verified_at | TIMESTAMP, nullable | |
 | attempt_count | TINYINT | untuk rate limiting |
 | created_at | TIMESTAMP | |
+
+Indeks `otp_active_lookup_index` pada `(no_hp, verified_at, created_at)` mempercepat pencarian OTP aktif. Record yang telah kedaluwarsa melewati masa retensi (default 7 hari) dihapus oleh scheduler.
 
 ## 5. Tabel `kategori_data` (untuk katalog & permintaan)
 

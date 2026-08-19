@@ -66,6 +66,7 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 
 ### 5.3 Modul Notifikasi
 - Notifikasi email pada setiap perubahan status penting (disetujui, ditolak, data siap)
+- OTP nomor HP dikirim melalui Meta WhatsApp Cloud API menggunakan template kategori `AUTHENTICATION` yang telah disetujui
 
 ### 5.4 Modul Dashboard & Laporan
 - Jumlah permintaan (per periode, per jenis data, per status)
@@ -99,6 +100,8 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 
 **Catatan**: Perlu dicek terlebih dahulu apakah paket hosting DomaiNesia mendukung akses SSH & Composer. Jika tidak tersedia, deployment Laravel dilakukan dengan build folder `vendor/` secara lokal lalu diunggah manual via File Manager/FTP cPanel.
 
+**Keputusan tambahan 19 Agustus 2026**: kebutuhan provider pada tabel di atas dipenuhi dengan Meta WhatsApp Cloud API resmi; rincian keputusan dicatat pada bagian 9.1.
+
 ## 8. Skema Database (Garis Besar)
 
 - `users` — staf/kasi/kabid/admin (autentikasi internal)
@@ -116,3 +119,12 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - Kepastian ketersediaan SSH/Composer di paket hosting DomaiNesia yang digunakan
 - Kebijakan retensi file (berapa lama file hasil permintaan disimpan sebelum dihapus)
 - Format/template surat pengantar untuk permintaan data khusus (apakah perlu upload dokumen pendukung)
+
+### 9.1 Keputusan Provider OTP (19 Agustus 2026)
+
+- Kanal awal OTP menggunakan **Meta WhatsApp Cloud API resmi**.
+- Pesan memakai template kategori `AUTHENTICATION` dengan tombol salin kode, masa berlaku kode 5 menit, dan delivery TTL maksimal 300 detik.
+- Driver log hanya digunakan untuk development lokal dan testing; production wajib gagal tertutup jika konfigurasi WhatsApp belum lengkap.
+- Metadata OTP kedaluwarsa disimpan maksimal 7 hari secara default lalu dipangkas oleh scheduler Laravel.
+- Respons API `2xx` diperlakukan sebagai pesan diterima Meta; pemantauan status delivery melalui webhook ditunda ke fase operasional berikutnya.
+- SMS sebagai kanal fallback ditunda sampai ada kebutuhan operasional dan persetujuan biaya.

@@ -34,8 +34,8 @@ Sistem dibangun sebagai aplikasi monolitik berbasis **Laravel (PHP)**, dirancang
 └────────────────┘  └─────────────────┘  └────────────────┘
                               │
                      ┌────────▼────────┐
-                     │  SMS/WA Gateway │
-                     │  (OTP pihak ke-3)│
+                     │Meta WhatsApp API│
+                     │ (OTP resmi Meta)│
                      └─────────────────┘
 ```
 
@@ -59,20 +59,21 @@ Sistem dibangun sebagai aplikasi monolitik berbasis **Laravel (PHP)**, dirancang
 | Integrasi | Tujuan | Catatan |
 |---|---|---|
 | SMTP (email) | Notifikasi status permintaan | Gunakan SMTP yang disediakan cPanel/domain BPS, atau layanan pihak ketiga (misal SendGrid/Mailgun) untuk deliverability lebih baik |
-| SMS/WA Gateway | OTP verifikasi nomor HP pemohon | Perlu dipilih provider (ada biaya per pesan) |
+| Meta WhatsApp Cloud API | OTP verifikasi nomor HP pemohon | Template `AUTHENTICATION` dengan tombol salin kode, masa berlaku 5 menit, delivery TTL maksimal 300 detik; token hanya disimpan di environment production |
 
 ## 6. Keamanan
 
 - File dataset khusus/mikro disimpan **di luar folder `public/`**, diakses hanya lewat controller yang memverifikasi otorisasi pemohon (signed URL / temporary link)
 - Password internal (staf/kasi/kabid/admin) di-hash menggunakan bcrypt (default Laravel)
 - OTP nomor HP memiliki masa berlaku singkat (misal 5 menit) dan rate limit percobaan
+- Pengiriman OTP memakai lock per nomor; konsumsi kode dan resolusi identitas pemohon dilakukan dalam transaksi database
 - HTTPS wajib diaktifkan (SSL gratis biasanya tersedia di cPanel via AutoSSL)
 - Validasi upload file (tipe file, ukuran maksimum) untuk mencegah upload berbahaya
 
 ## 7. Keterbatasan & Pertimbangan Shared Hosting
 
 - Tidak ada queue worker background berjalan terus-menerus (tidak seperti VPS) — proses seperti pengiriman email dijalankan secara sinkron atau memanfaatkan cron job cPanel untuk menjalankan `schedule:run` Laravel secara berkala
-- Cron job cPanel digunakan untuk tugas terjadwal (misal reminder permintaan yang lama belum diproses)
+- Cron job cPanel menjalankan `schedule:run`, termasuk pemangkasan metadata OTP yang kedaluwarsa melewati masa retensi
 - Kapasitas storage & bandwidth terbatas sesuai paket hosting — perlu dipantau terutama jika ukuran dataset besar
 
 ## 8. Arsitektur 13-Layer

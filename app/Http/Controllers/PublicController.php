@@ -6,6 +6,8 @@ use App\Models\DatasetTerbuka;
 use App\Models\KategoriData;
 use App\Models\PermintaanData;
 use App\Models\UnduhanLog;
+use App\Rules\NomorHpIndonesia;
+use App\Support\NomorTeleponIndonesia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -87,13 +89,15 @@ class PublicController extends Controller
     {
         $request->validate([
             'nomor_tiket' => 'required|string|max:30',
-            'no_hp' => ['required', 'string', 'max:20', 'regex:/^(?:\+62|62|0)[0-9]{8,13}$/'],
+            'no_hp' => ['required', 'string', 'max:20', new NomorHpIndonesia],
         ]);
+
+        $varianNomorHp = NomorTeleponIndonesia::varianPenyimpanan($request->no_hp);
 
         $permintaan = PermintaanData::with('pemohon')
             ->where('nomor_tiket', $request->nomor_tiket)
-            ->whereHas('pemohon', function ($q) use ($request) {
-                $q->where('no_hp', $request->no_hp);
+            ->whereHas('pemohon', function ($q) use ($varianNomorHp) {
+                $q->whereIn('no_hp', $varianNomorHp);
             })
             ->first();
 
