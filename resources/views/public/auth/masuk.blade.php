@@ -8,7 +8,9 @@
             <h1 class="text-2xl font-bold text-gray-800 text-center">Masuk Pemohon</h1>
             <p class="text-gray-500 text-center mt-2">Masukkan nomor WhatsApp. Kami akan mengirim kode OTP tanpa password.</p>
 
-            <form method="POST" action="{{ route('pemohon.masuk.kirim-otp') }}" class="mt-6 space-y-4">
+            <form method="POST" action="{{ route('pemohon.masuk.kirim-otp') }}" class="mt-6 space-y-4"
+                x-data="{ submitting: false }"
+                @submit="if (submitting) { $event.preventDefault() } else { submitting = true }">
                 @csrf
 
                 <div>
@@ -20,8 +22,10 @@
                     @error('no_hp') <p id="no-hp-error" class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <button type="submit" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 transition">
-                    Masuk dengan OTP
+                <button type="submit" :disabled="submitting" aria-live="polite"
+                    class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="!submitting">Masuk dengan OTP</span>
+                    <span x-show="submitting" x-cloak class="js-only">Mengirim OTP...</span>
                 </button>
             </form>
 

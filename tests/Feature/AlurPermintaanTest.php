@@ -44,10 +44,13 @@ class AlurPermintaanTest extends TestCase
         $pemohon = $this->registerPemohon();
         $kategori = KategoriData::first();
 
-        $this->withSession([
+        $form = $this->withSession([
             'pemohon_otp' => $pemohon->no_hp,
             'pemohon_id' => $pemohon->id,
-        ])->post('/permintaan', [
+        ])->get(route('permintaan.create'))->assertOk();
+
+        $this->post('/permintaan', [
+            'idempotensi_token' => $form->viewData('idempotensiToken'),
             'jenis_data' => 'KCDA 2025',
             'tujuan_penggunaan' => 'Untuk penelitian skripsi',
             'periode_data' => '2025',

@@ -87,22 +87,29 @@ class PublicController extends Controller
 
     public function cekStatusPost(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nomor_tiket' => 'required|string|max:30',
             'no_hp' => ['required', 'string', 'max:20', new NomorHpIndonesia],
         ]);
 
-        $varianNomorHp = NomorTeleponIndonesia::varianPenyimpanan($request->no_hp);
+        $nomorTiket = Str::upper(trim($validated['nomor_tiket']));
+        $nomorHp = trim($validated['no_hp']);
+        $varianNomorHp = NomorTeleponIndonesia::varianPenyimpanan($nomorHp);
 
         $permintaan = PermintaanData::with('pemohon')
-            ->where('nomor_tiket', $request->nomor_tiket)
+            ->where('nomor_tiket', $nomorTiket)
             ->whereHas('pemohon', function ($q) use ($varianNomorHp) {
                 $q->whereIn('no_hp', $varianNomorHp);
             })
             ->first();
 
         if (! $permintaan) {
-            return redirect()->back()->withErrors(['not_found' => 'Data permintaan tidak ditemukan.']);
+            return redirect()->back()
+                ->withInput([
+                    'nomor_tiket' => $nomorTiket,
+                    'no_hp' => $nomorHp,
+                ])
+                ->withErrors(['not_found' => 'Data permintaan tidak ditemukan. Periksa kembali nomor tiket dan nomor WhatsApp.']);
         }
 
         $request->session()->put("akses_status.{$permintaan->id}", now()->addMinutes(10)->timestamp);

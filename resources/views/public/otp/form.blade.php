@@ -10,7 +10,8 @@
                 display: '00:00',
                 expired: {{ $durasiOtpDetik > 0 ? 'false' : 'true' }},
                 resendTimer: {{ $durasiKirimUlangDetik ?? 60 }},
-                resendSubmitting: false
+                resendSubmitting: false,
+                verificationSubmitting: false
             }"
             x-init="
                 display = String(Math.floor(timer / 60)).padStart(2, '0') + ':' + String(timer % 60).padStart(2, '0');
@@ -32,7 +33,8 @@
                 untuk {{ $modeOtp === 'masuk' ? 'masuk' : 'menyelesaikan pendaftaran' }}.
             </p>
 
-            <form method="POST" action="{{ route('otp.verifikasi') }}" class="mt-6 space-y-4">
+            <form method="POST" action="{{ route('otp.verifikasi') }}" class="mt-6 space-y-4"
+                @submit="if (expired || verificationSubmitting || resendSubmitting) { $event.preventDefault() } else { verificationSubmitting = true }">
                 @csrf
                 <div>
                     <label for="kode_otp" class="block text-sm font-medium text-gray-700 mb-1">Kode OTP 6 Digit</label>
@@ -44,9 +46,10 @@
                     @error('kode_otp') <p id="kode-otp-error" class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <button type="submit" x-bind:disabled="expired"
+                <button type="submit" x-bind:disabled="expired || verificationSubmitting || resendSubmitting" aria-live="polite"
                     class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    Verifikasi & Lanjutkan
+                    <span x-show="!verificationSubmitting">Verifikasi & Lanjutkan</span>
+                    <span x-show="verificationSubmitting" x-cloak class="js-only">Memverifikasi...</span>
                 </button>
             </form>
 
@@ -58,9 +61,9 @@
 
             <div class="mt-4 flex items-center justify-center gap-4 text-sm">
                 <form method="POST" action="{{ route('otp.kirim-ulang') }}"
-                    @submit="if (resendTimer > 0 || resendSubmitting) { $event.preventDefault() } else { resendSubmitting = true }">
+                    @submit="if (resendTimer > 0 || resendSubmitting || verificationSubmitting) { $event.preventDefault() } else { resendSubmitting = true }">
                     @csrf
-                    <button type="submit" :disabled="resendTimer > 0 || resendSubmitting"
+                    <button type="submit" :disabled="resendTimer > 0 || resendSubmitting || verificationSubmitting"
                         class="text-primary-500 font-semibold hover:underline focus-visible:ring-2 focus-visible:ring-primary-500 rounded disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed">
                         <span x-show="resendSubmitting" class="js-only">Mengirim...</span>
                         <span x-show="!resendSubmitting && resendTimer > 0" class="js-only">Kirim ulang dalam <span x-text="resendTimer"></span> detik</span>

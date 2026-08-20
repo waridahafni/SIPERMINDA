@@ -15,6 +15,13 @@
             <form method="POST" action="{{ route('cek-status.post') }}" class="space-y-5">
                 @csrf
 
+                @error('not_found')
+                    <div id="status-not-found-error" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert" aria-labelledby="status-not-found-title">
+                        <p id="status-not-found-title" class="font-semibold text-sm">Permintaan belum ditemukan</p>
+                        <p class="text-sm mt-1">{{ $message }}</p>
+                    </div>
+                @enderror
+
                 <div>
                     <label for="nomor_tiket" class="block text-sm font-medium text-gray-700 mb-1">Nomor Tiket</label>
                     <input id="nomor_tiket" type="text" name="nomor_tiket" value="{{ old('nomor_tiket') }}" required autocomplete="off" autocapitalize="characters" placeholder="Contoh: BPS/PD/2026/00001"

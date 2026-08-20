@@ -8,6 +8,7 @@ use App\Exceptions\PengirimanOtpException;
 use App\Http\Requests\DaftarPemohonRequest;
 use App\Http\Requests\LengkapiPendaftaranRequest;
 use App\Http\Requests\MasukPemohonRequest;
+use App\Http\Requests\StorePermintaanRequest;
 use App\Models\OtpVerification;
 use App\Models\Pemohon;
 use App\Support\NomorTeleponIndonesia;
@@ -568,6 +569,7 @@ class OtpController extends Controller
             'pendaftaran_terverifikasi',
             'akses_status',
             'url.intended',
+            StorePermintaanRequest::SESSION_TOKEN_IDEMPOTENSI,
         ]);
         // Hancurkan ID lama agar cookie sesi yang pernah dicuri tidak tetap sah.
         // Data guard internal yang berada di session saat ini tetap dibawa ke ID baru.
@@ -587,6 +589,7 @@ class OtpController extends Controller
             'otp_verification_id',
             'pendaftaran_terverifikasi',
             'akses_status',
+            StorePermintaanRequest::SESSION_TOKEN_IDEMPOTENSI,
         ]);
         $request->session()->put([
             'pemohon_otp' => $pemohon->no_hp,
@@ -636,6 +639,7 @@ class OtpController extends Controller
             'pemohon_otp',
             'pemohon_nama',
             'otp_nomor',
+            StorePermintaanRequest::SESSION_TOKEN_IDEMPOTENSI,
         ]);
     }
 

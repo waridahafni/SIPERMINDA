@@ -98,6 +98,8 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - **Skalabilitas**: dirancang untuk beban BPS kabupaten (bukan skala nasional), sehingga shared hosting mencukupi untuk awal
 - **Keamanan**: file data khusus/mikro tidak boleh dapat diakses langsung via URL publik tanpa melalui proses autentikasi/otorisasi
 - **Reliabilitas notifikasi**: pastikan pengiriman email tidak masuk folder spam (perlu konfigurasi SPF/DKIM di domain)
+- **Zona waktu layanan (tambahan 20 Agustus 2026)**: seluruh proses bisnis, nomor tiket, scheduler, dan tampilan waktu menggunakan `Asia/Jakarta` (WIB)
+- **Integritas pengajuan (tambahan 20 Agustus 2026)**: pembuatan tiket wajib tahan terhadap klik/kirim ulang melalui token idempotensi unik, session lock, serta rate limit terpisah per pemohon dan alamat IP
 
 ## 7. Tech Stack yang Direkomendasikan
 
@@ -123,6 +125,7 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - `dataset_terbuka` — katalog data terbuka (judul, kategori, periode, file, uploader, tanggal publish)
 - `unduhan_log` — catatan siapa mengunduh dataset apa dan kapan
 - `permintaan_data` — permintaan data khusus (nomor tiket, pemohon_id, jenis data, tujuan, status, timestamps tiap tahap)
+- `permintaan_data.idempotensi_hash` (tambahan 20 Agustus 2026) — digest token unik untuk menjamin satu pengiriman ulang tidak membuat tiket kedua; baris lama boleh bernilai kosong
 - `permintaan_approval_log` — riwayat approval per tahap (staf/kasi/kabid, keputusan, catatan, timestamp)
 - `notifikasi_log` — riwayat notifikasi email yang terkirim
 

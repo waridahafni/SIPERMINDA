@@ -52,7 +52,7 @@ Sistem dibangun sebagai aplikasi monolitik berbasis **Laravel (PHP)**, dirancang
 2. **Build** — `composer install --optimize-autoloader --no-dev` dijalankan lokal (karena kemungkinan tidak ada akses Composer/SSH di shared hosting), hasil `vendor/` diikutsertakan saat upload
 3. **Deploy** — upload seluruh project via File Manager/FTP cPanel; folder `public/` diarahkan sebagai document root
 4. **Database** — export `.sql` dari lokal, import ke database cPanel via phpMyAdmin
-5. **Konfigurasi** — `.env` disesuaikan (DB credentials, SMTP, APP_URL, APP_KEY)
+5. **Konfigurasi** — `.env` disesuaikan (DB credentials, SMTP, APP_URL, APP_KEY, dan `APP_TIMEZONE=Asia/Jakarta`)
 
 ## 5. Integrasi Eksternal
 
@@ -74,6 +74,7 @@ Sistem dibangun sebagai aplikasi monolitik berbasis **Laravel (PHP)**, dirancang
 
 - Tidak ada queue worker background berjalan terus-menerus (tidak seperti VPS) — proses seperti pengiriman email dijalankan secara sinkron atau memanfaatkan cron job cPanel untuk menjalankan `schedule:run` Laravel secara berkala
 - Cron job cPanel menjalankan `schedule:run`, termasuk pemangkasan metadata OTP yang kedaluwarsa melewati masa retensi
+- Zona waktu aplikasi dan scheduler ditetapkan ke `Asia/Jakarta` (WIB) agar proses bisnis sesuai waktu layanan BPS Padang Lawas
 - Kapasitas storage & bandwidth terbatas sesuai paket hosting — perlu dipantau terutama jika ukuran dataset besar
 
 ## 8. Arsitektur 13-Layer
@@ -102,6 +103,7 @@ Beberapa layer di bawah tidak sepenuhnya tersedia di shared hosting cPanel (misa
 - Keberadaan akun baru diperiksa setelah OTP valid. Nomor baru dari alur Masuk diberi bukti verifikasi singkat untuk melengkapi profil tanpa OTP kedua sehingga endpoint awal tidak menjadi sarana enumerasi akun.
 - `pemohon_id` dalam session menjadi identitas publik yang otoritatif. Middleware selalu memuat ulang model terverifikasi dan controller membatasi permintaan/unduhan melalui relasi kepemilikan pemohon tersebut.
 - ID session dirotasi setelah autentikasi dan saat keluar. Logout pemohon memakai `POST` + CSRF dan tidak mengakhiri guard internal petugas.
+- Pembuatan permintaan memakai token idempotensi yang digest-nya unik di database; session lock mencegah balapan satu sesi dan token baru tetap dapat dipakai dari beberapa tab.
 
 ### 8.5 Hosting & Deployment
 - Shared hosting cPanel (DomaiNesia)

@@ -9,7 +9,8 @@
             <p class="text-gray-500 text-center mt-2">Buat akun masyarakat atau instansi menggunakan nomor WhatsApp aktif.</p>
 
             <form method="POST" action="{{ route('pemohon.daftar.kirim-otp') }}" class="mt-6 space-y-4"
-                x-data="{ jenisPemohon: @js(old('jenis_pemohon', 'publik')) }">
+                x-data="{ jenisPemohon: @js(old('jenis_pemohon', 'publik')), submitting: false }"
+                @submit="if (submitting) { $event.preventDefault() } else { submitting = true }">
                 @csrf
 
                 <div>
@@ -23,8 +24,10 @@
 
                 @include('public.auth._profil')
 
-                <button type="submit" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 transition">
-                    Daftar & Kirim OTP
+                <button type="submit" :disabled="submitting" aria-live="polite"
+                    class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="!submitting">Daftar & Kirim OTP</span>
+                    <span x-show="submitting" x-cloak class="js-only">Mengirim OTP...</span>
                 </button>
             </form>
 

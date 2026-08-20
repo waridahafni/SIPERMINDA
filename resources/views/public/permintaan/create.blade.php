@@ -11,8 +11,11 @@
     </div>
 
     <div class="max-w-3xl mx-auto px-4 py-8">
-        <form method="POST" action="{{ route('permintaan.store') }}" class="bg-white rounded-xl shadow-sm border p-5 sm:p-8 space-y-6">
+        <form method="POST" action="{{ route('permintaan.store') }}" class="bg-white rounded-xl shadow-sm border p-5 sm:p-8 space-y-6"
+            x-data="{ submitting: false }"
+            @submit="if (submitting) { $event.preventDefault() } else { submitting = true }">
             @csrf
+            <input type="hidden" name="idempotensi_token" value="{{ $idempotensiToken }}">
 
             @if($errors->any())
                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert" aria-labelledby="form-error-title">
@@ -76,7 +79,11 @@
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition shadow">Ajukan Permintaan</button>
+            <button type="submit" :disabled="submitting" aria-live="polite"
+                class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition shadow disabled:opacity-50 disabled:cursor-not-allowed">
+                <span x-show="!submitting">Ajukan Permintaan</span>
+                <span x-show="submitting" x-cloak class="js-only">Mengajukan...</span>
+            </button>
         </form>
     </div>
 @endsection

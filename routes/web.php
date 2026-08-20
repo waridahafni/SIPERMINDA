@@ -39,8 +39,13 @@ Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->middlew
 Route::middleware(['pemohon.otp'])->group(function () {
     Route::get('/akun/permintaan', [PermintaanController::class, 'indexPemohon'])->name('pemohon.permintaan.index');
     Route::get('/akun/permintaan/{permintaan}', [PermintaanController::class, 'showPemohon'])->name('pemohon.permintaan.show');
-    Route::get('/permintaan/create', [PermintaanController::class, 'create'])->name('permintaan.create');
-    Route::post('/permintaan', [PermintaanController::class, 'store'])->name('permintaan.store');
+    Route::get('/permintaan/create', [PermintaanController::class, 'create'])
+        ->block(15, 5)
+        ->name('permintaan.create');
+    Route::post('/permintaan', [PermintaanController::class, 'store'])
+        ->middleware('throttle:permintaan-pemohon')
+        ->block(120, 10)
+        ->name('permintaan.store');
     Route::get('/permintaan/{permintaan}/selesai', [PermintaanController::class, 'selesai'])->name('permintaan.selesai');
     Route::get('/permintaan/{permintaan}/unduh', [PermintaanController::class, 'unduhHasil'])->name('permintaan.unduh');
 });

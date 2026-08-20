@@ -19,7 +19,7 @@ SIPERMINDA adalah Sistem Permintaan Data BPS Kabupaten Padang Lawas. Aplikasi in
 
 ### Instalasi
 
-1. Salin `.env.example` menjadi `.env`, lalu isi koneksi database dan konfigurasi mail.
+1. Salin `.env.example` menjadi `.env`, lalu isi koneksi database dan konfigurasi mail. Pertahankan `APP_TIMEZONE=Asia/Jakarta` agar nomor tiket, scheduler, dan waktu layanan mengikuti WIB.
 2. Isi `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_EMAIL`, dan `INITIAL_ADMIN_PASSWORD`. Password awal harus minimal 12 karakter serta mengandung huruf besar, huruf kecil, dan angka.
 3. Jalankan `composer install`, `php artisan key:generate`, `php artisan migrate --seed`, `npm install`, dan `npm run build`.
 4. Jalankan pengembangan lokal dengan `composer run dev`.
