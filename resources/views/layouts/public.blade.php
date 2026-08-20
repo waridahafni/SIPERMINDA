@@ -27,7 +27,7 @@
     <noscript><style>[x-cloak] { display: block !important; } .js-only { display: none !important; }</style></noscript>
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50 text-gray-800" x-data="{ mobileMenu: false }">
+<body class="font-sans antialiased bg-gray-50 text-gray-800" x-data="{ mobileMenu: false, loginMenu: false }">
     <a href="#konten-utama" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:text-primary-700 focus:px-4 focus:py-2 focus:rounded focus:shadow-lg">Lewati ke konten utama</a>
     <nav class="bg-primary-500 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,14 +50,41 @@
                             @csrf
                             <button type="submit" class="border border-white/60 hover:bg-primary-600 px-3 py-1.5 rounded transition focus-visible:ring-2 focus-visible:ring-white">Keluar</button>
                         </form>
+                        <span class="h-6 border-l border-primary-300" aria-hidden="true"></span>
+                        <a href="{{ route('internal.login') }}" class="text-primary-100 hover:text-white transition" title="Khusus pegawai BPS">Masuk Petugas</a>
                     @else
-                        <a href="{{ route('pemohon.masuk') }}" class="border border-white/60 px-3 py-1.5 rounded hover:bg-primary-600 transition">Masuk Pemohon</a>
+                        <details x-ref="loginDetails" class="relative"
+                            @toggle="loginMenu = $el.open; if ($el.open) { mobileMenu = false; $nextTick(() => $refs.loginPemohon.focus()) }"
+                            @click.outside="if ($el.open) { $el.open = false }"
+                            @keydown.escape.stop.prevent="if ($el.open) { $el.open = false; $nextTick(() => $refs.loginSummary.focus()) }"
+                            @focusout="if ($el.open && !$el.contains($event.relatedTarget)) { $el.open = false }">
+                            <summary id="tombol-masuk-desktop" x-ref="loginSummary"
+                                class="inline-flex cursor-pointer list-none items-center gap-1.5 border border-white/60 px-3 py-1.5 rounded hover:bg-primary-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white [&::-webkit-details-marker]:hidden"
+                                aria-controls="menu-masuk-desktop" :aria-expanded="loginMenu.toString()">
+                                Masuk
+                                <svg class="w-4 h-4 transition-transform" :class="loginMenu ? 'rotate-180' : ''" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </summary>
+                            <div id="menu-masuk-desktop"
+                                class="absolute right-0 top-full mt-2 w-72 overflow-hidden rounded-xl bg-white text-gray-800 shadow-xl ring-1 ring-black/10 z-[60]"
+                                role="group" aria-labelledby="tombol-masuk-desktop">
+                                <a x-ref="loginPemohon" href="{{ route('pemohon.masuk') }}"
+                                    class="block px-4 py-3 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500">
+                                    <span class="block font-semibold text-primary-700">Masuk sebagai Pemohon</span>
+                                    <span class="block mt-0.5 text-xs font-normal text-gray-600">Untuk masyarakat atau instansi, menggunakan OTP WhatsApp.</span>
+                                </a>
+                                <a href="{{ route('internal.login') }}"
+                                    class="block border-t border-gray-100 px-4 py-3 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500">
+                                    <span class="block font-semibold text-gray-800">Masuk sebagai Petugas</span>
+                                    <span class="block mt-0.5 text-xs font-normal text-gray-600">Khusus pegawai BPS yang memiliki akun internal.</span>
+                                </a>
+                            </div>
+                        </details>
                         <a href="{{ route('pemohon.daftar') }}" class="bg-white text-primary-600 font-semibold px-3 py-1.5 rounded hover:bg-primary-100 transition">Daftar Pemohon</a>
                     @endif
-                    <span class="h-6 border-l border-primary-300" aria-hidden="true"></span>
-                    <a href="{{ route('internal.login') }}" class="text-primary-100 hover:text-white transition" title="Khusus pegawai BPS">Masuk Petugas</a>
                 </div>
-                <button type="button" x-ref="menuButton" @click="mobileMenu = !mobileMenu"
+                <button type="button" x-ref="menuButton" @click="if ($refs.loginDetails) { $refs.loginDetails.open = false }; loginMenu = false; mobileMenu = !mobileMenu"
                     @keydown.escape.window="if (mobileMenu) { mobileMenu = false; $nextTick(() => $refs.menuButton.focus()) }"
                     class="xl:hidden p-2 rounded hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-white"
                     :aria-label="mobileMenu ? 'Tutup menu navigasi' : 'Buka menu navigasi'" aria-controls="menu-mobile" :aria-expanded="mobileMenu.toString()">
@@ -79,15 +106,25 @@
                     @csrf
                     <button type="submit" class="w-full text-left py-3 font-semibold hover:text-primary-200">Keluar</button>
                 </form>
+                <hr class="border-primary-400">
+                <p class="text-xs text-primary-200 pt-3">Khusus pegawai BPS</p>
+                <a href="{{ route('internal.login') }}" class="block py-3 font-semibold hover:text-primary-200">Masuk Petugas</a>
             @else
-                <div class="grid grid-cols-2 gap-3 py-3">
-                    <a href="{{ route('pemohon.masuk') }}" class="text-center border border-white/60 px-3 py-3 rounded font-semibold">Masuk Pemohon</a>
-                    <a href="{{ route('pemohon.daftar') }}" class="text-center bg-white text-primary-600 px-3 py-3 rounded font-semibold">Daftar Pemohon</a>
+                <div class="border-t border-primary-400 pt-3 mt-1" aria-labelledby="menu-masuk-mobile-title">
+                    <p id="menu-masuk-mobile-title" class="font-semibold">Masuk</p>
+                    <div class="grid sm:grid-cols-2 gap-2 mt-2">
+                        <a href="{{ route('pemohon.masuk') }}" class="block rounded-lg border border-white/50 px-3 py-2.5 hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                            <span class="block font-semibold">Sebagai Pemohon</span>
+                            <span class="block mt-0.5 text-xs font-normal text-primary-100">Masyarakat/instansi via OTP WhatsApp</span>
+                        </a>
+                        <a href="{{ route('internal.login') }}" class="block rounded-lg border border-white/50 px-3 py-2.5 hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                            <span class="block font-semibold">Sebagai Petugas</span>
+                            <span class="block mt-0.5 text-xs font-normal text-primary-100">Khusus pegawai BPS</span>
+                        </a>
+                    </div>
+                    <a href="{{ route('pemohon.daftar') }}" class="block mt-3 text-center bg-white text-primary-600 px-3 py-3 rounded font-semibold hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600">Daftar Pemohon</a>
                 </div>
             @endif
-            <hr class="border-primary-400">
-            <p class="text-xs text-primary-200 pt-3">Khusus pegawai BPS</p>
-            <a href="{{ route('internal.login') }}" class="block py-3 font-semibold hover:text-primary-200">Masuk Petugas</a>
         </div>
     </nav>
 

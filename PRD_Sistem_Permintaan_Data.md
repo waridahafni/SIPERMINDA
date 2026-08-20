@@ -152,3 +152,9 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - Keberadaan akun tidak diperiksa atau diungkap sebelum OTP valid. Nomor baru dari alur Masuk melengkapi profil setelah verifikasi tanpa OTP kedua.
 - Kepemilikan permintaan dan hasil unduhan ditentukan dari `pemohon_id` sesi yang tervalidasi, bukan dari nomor HP yang dikirim ulang oleh browser.
 - Logout pemohon memakai metode `POST`, membersihkan state OTP, dan merotasi session tanpa mengakhiri sesi petugas internal.
+
+### 9.3 Keputusan Navigasi Autentikasi Publik (20 Agustus 2026)
+
+- Navbar guest menampilkan satu kontrol **Masuk** yang membuka pilihan **Masuk sebagai Pemohon** dan **Masuk sebagai Petugas** agar navigasi tetap ringkas.
+- **Daftar Pemohon** tetap menjadi CTA terpisah; tidak tersedia pendaftaran publik untuk akun petugas.
+- Penggabungan hanya berlaku pada pintu navigasi. Form, route, metode autentikasi, dan guard tetap terpisah: pemohon memakai OTP WhatsApp, sedangkan petugas memakai email dan password.
