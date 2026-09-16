@@ -6,6 +6,7 @@ use App\Http\Controllers\Internal\KatalogController as InternalKatalogController
 use App\Http\Controllers\Internal\LaporanController;
 use App\Http\Controllers\Internal\PenggunaController;
 use App\Http\Controllers\Internal\PermintaanController as InternalPermintaanController;
+use App\Http\Controllers\Internal\UnggahDokumenController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PermintaanController;
 use App\Http\Controllers\PublicController;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 // Public
 Route::get('/', [PublicController::class, 'index'])->name('beranda');
 Route::get('/alur', [PublicController::class, 'alur'])->name('alur');
+Route::get('/privasi', [PublicController::class, 'privasi'])->name('privasi');
+Route::get('/ketentuan-layanan', [PublicController::class, 'ketentuan'])->name('ketentuan');
 Route::get('/katalog', [PublicController::class, 'katalog'])->name('katalog.index');
 Route::get('/katalog/{dataset}', [PublicController::class, 'detailDataset'])->name('katalog.detail');
 Route::get('/katalog/{dataset}/unduh', [PublicController::class, 'unduhDataset'])->name('katalog.unduh');
@@ -39,6 +42,10 @@ Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->middlew
 Route::middleware(['pemohon.otp'])->group(function () {
     Route::get('/akun/permintaan', [PermintaanController::class, 'indexPemohon'])->name('pemohon.permintaan.index');
     Route::get('/akun/permintaan/{permintaan}', [PermintaanController::class, 'showPemohon'])->name('pemohon.permintaan.show');
+    Route::post('/akun/permintaan/{permintaan}/info-tambahan', [PermintaanController::class, 'jawabInfoTambahan'])
+        ->middleware('throttle:10,1')
+        ->block(15, 5)
+        ->name('pemohon.permintaan.info-tambahan.jawab');
     Route::get('/permintaan/create', [PermintaanController::class, 'create'])
         ->block(15, 5)
         ->name('permintaan.create');
@@ -53,6 +60,10 @@ Route::middleware(['pemohon.otp'])->group(function () {
 // Status tracking (tanpa OTP, verifikasi tiket + no HP)
 Route::get('/status/{nomorTiket}', [StatusController::class, 'cek'])->name('status.cek')->where('nomorTiket', '.*');
 
+// Alias login kompatibel dengan middleware autentikasi default Laravel.
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+
 // Auth Internal
 Route::get('/internal/login', [LoginController::class, 'showLoginForm'])->name('internal.login');
 Route::post('/internal/login', [LoginController::class, 'login'])->name('internal.login.post');
@@ -60,6 +71,8 @@ Route::post('/internal/logout', [LoginController::class, 'logout'])->name('inter
 
 // Internal (butuh auth)
 Route::prefix('internal')->middleware(['auth'])->name('internal.')->group(function () {
+    Route::post('/dokumen/unggah', [UnggahDokumenController::class, 'store'])
+        ->middleware('throttle:10,1')->name('dokumen.unggah');
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:lihat-dashboard')->name('dashboard');
 
     // Permintaan
@@ -85,6 +98,7 @@ Route::prefix('internal')->middleware(['auth'])->name('internal.')->group(functi
     // Laporan (kasi/kabid/admin)
     Route::middleware('permission:lihat-laporan')->group(function () {
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
+        Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
     });
 
     // Users (admin only)

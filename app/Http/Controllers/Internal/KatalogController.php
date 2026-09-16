@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Internal;
 use App\Http\Controllers\Controller;
 use App\Models\DatasetTerbuka;
 use App\Models\KategoriData;
+use App\Services\UnggahDokumen;
+use App\Support\DokumenStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class KatalogController extends Controller
 {
@@ -46,19 +46,18 @@ class KatalogController extends Controller
         return view('internal.katalog.create', compact('kategori'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, UnggahDokumen $unggah)
     {
         $request->validate([
             'judul' => 'required|string|max:255',
             'kategori_id' => 'required|exists:kategori_data,id',
             'periode' => 'required|string|max:50',
             'deskripsi' => 'required|string|max:5000',
-            'file' => 'required|file|mimes:pdf,xls,xlsx,csv,json,zip|max:51200',
+            ...UnggahDokumen::aturan('file'),
         ]);
 
-        $file = $request->file('file');
-        $filename = Str::uuid().'.'.$file->extension();
-        $path = $file->storeAs('dataset_terbuka', $filename, 'local');
+        $file = $unggah->simpan($request, 'file', 'katalog-baru');
+        $path = $file['path'];
 
         try {
             DatasetTerbuka::create([
@@ -67,13 +66,13 @@ class KatalogController extends Controller
                 'periode' => $request->periode,
                 'deskripsi' => $request->deskripsi,
                 'file_path' => $path,
-                'ukuran_file' => $file->getSize(),
+                'ukuran_file' => $file['ukuran'],
                 'uploaded_by' => Auth::id(),
                 'published_at' => now(),
                 'status' => 'aktif',
             ]);
         } catch (\Throwable $e) {
-            Storage::disk('local')->delete($path);
+            DokumenStorage::disk()->delete($path);
 
             throw $e;
         }
@@ -88,24 +87,23 @@ class KatalogController extends Controller
         return view('internal.katalog.edit', compact('dataset', 'kategori'));
     }
 
-    public function update(Request $request, DatasetTerbuka $dataset)
+    public function update(Request $request, DatasetTerbuka $dataset, UnggahDokumen $unggah)
     {
         $request->validate([
             'judul' => 'required|string|max:255',
             'kategori_id' => 'required|exists:kategori_data,id',
             'periode' => 'required|string|max:50',
             'deskripsi' => 'required|string|max:5000',
-            'file' => 'nullable|file|mimes:pdf,xls,xlsx,csv,json,zip|max:51200',
+            ...UnggahDokumen::aturan('file', false),
         ]);
 
         $data = $request->only(['judul', 'kategori_id', 'periode', 'deskripsi']);
 
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $filename = Str::uuid().'.'.$file->extension();
-            $path = $file->storeAs('dataset_terbuka', $filename, 'local');
+        if ($request->hasFile('file') || $request->filled('upload_token')) {
+            $file = $unggah->simpan($request, 'file', 'katalog-edit', (int) $dataset->id);
+            $path = $file['path'];
             $data['file_path'] = $path;
-            $data['ukuran_file'] = $file->getSize();
+            $data['ukuran_file'] = $file['ukuran'];
         }
 
         $fileLama = $dataset->file_path;
@@ -114,32 +112,31 @@ class KatalogController extends Controller
             $dataset->update($data);
         } catch (\Throwable $e) {
             if (isset($path)) {
-                Storage::disk('local')->delete($path);
+                DokumenStorage::disk()->delete($path);
             }
 
             throw $e;
         }
 
         if (isset($path) && $fileLama !== $path) {
-            Storage::disk('local')->delete($fileLama);
+            DokumenStorage::disk()->delete($fileLama);
         }
 
         return redirect()->route('internal.katalog.index')->with('success', 'Dataset berhasil diupdate.');
     }
 
-    public function revisi(Request $request, DatasetTerbuka $dataset)
+    public function revisi(Request $request, DatasetTerbuka $dataset, UnggahDokumen $unggah)
     {
         $request->validate([
             'judul' => 'nullable|string|max:255',
             'kategori_id' => 'nullable|exists:kategori_data,id',
             'periode' => 'nullable|string|max:50',
             'deskripsi' => 'nullable|string|max:5000',
-            'file' => 'required|file|mimes:pdf,xls,xlsx,csv,json,zip|max:51200',
+            ...UnggahDokumen::aturan('file'),
         ]);
 
-        $file = $request->file('file');
-        $filename = Str::uuid().'.'.$file->extension();
-        $path = $file->storeAs('dataset_terbuka', $filename, 'local');
+        $file = $unggah->simpan($request, 'file', 'katalog-revisi', (int) $dataset->id);
+        $path = $file['path'];
 
         try {
             DB::transaction(function () use ($dataset, $request, $file, $path) {
@@ -157,7 +154,7 @@ class KatalogController extends Controller
                     'periode' => $request->periode ?? $dataset->periode,
                     'deskripsi' => $request->deskripsi ?? $dataset->deskripsi,
                     'file_path' => $path,
-                    'ukuran_file' => $file->getSize(),
+                    'ukuran_file' => $file['ukuran'],
                     'versi' => $dataset->versi + 1,
                     'dataset_induk_id' => $dataset->id,
                     'uploaded_by' => Auth::id(),
@@ -166,7 +163,7 @@ class KatalogController extends Controller
                 ]);
             });
         } catch (\Throwable $e) {
-            Storage::disk('local')->delete($path);
+            DokumenStorage::disk()->delete($path);
 
             throw $e;
         }

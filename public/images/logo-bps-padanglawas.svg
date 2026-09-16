@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 128" role="img" aria-labelledby="title">
+    <title id="title">Badan Pusat Statistik</title>
+    <path fill="#0b9ed9" d="M24 5h48l-7 23H34l-8 26H4z"/>
+    <path fill="#087cc2" d="M39 37h34l-20 62H18l12-39h22z"/>
+    <path fill="#f58220" d="M82 4h35l-7 23h20c18 0 27 11 22 28-4 16-18 27-39 27h-15l7-22h13c8 0 13-4 15-12 2-7-2-10-10-10H76z"/>
+    <path fill="#6dbd2b" d="M79 51h39l-7 23H92l-8 26H49l13-41h24z"/>
+    <path fill="none" stroke="#0b9ed9" stroke-linecap="round" stroke-width="4" d="M12 92C-3 73 10 47 43 31M100 11c34-4 57 14 54 43-2 31-29 49-65 51"/>
+</svg>

@@ -14,6 +14,8 @@ return [
     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
+    'documents' => env('DOCUMENTS_DISK', 'local'),
+    'direct_upload' => env('DOCUMENTS_DIRECT_UPLOAD', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,12 +53,17 @@ return [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
+            'region' => env('AWS_DEFAULT_REGION', 'auto'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
+            'endpoint' => env('AWS_ENDPOINT') ?: null,
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            'visibility' => 'private',
+            // Hindari checksum opsional AWS yang tidak selalu didukung API kompatibel S3.
+            'request_checksum_calculation' => 'when_required',
+            'response_checksum_validation' => 'when_required',
+            'http' => ['connect_timeout' => 5, 'timeout' => 60],
+            'throw' => true,
             'report' => false,
         ],
 

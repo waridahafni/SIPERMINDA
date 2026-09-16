@@ -34,8 +34,8 @@ Sistem dibangun sebagai aplikasi monolitik berbasis **Laravel (PHP)**, dirancang
 └────────────────┘  └─────────────────┘  └────────────────┘
                               │
                      ┌────────▼────────┐
-                     │Meta WhatsApp API│
-                     │ (OTP resmi Meta)│
+                     │Verihubs SMS API │
+                     │  (OTP via SMS)  │
                      └─────────────────┘
 ```
 
@@ -59,7 +59,8 @@ Sistem dibangun sebagai aplikasi monolitik berbasis **Laravel (PHP)**, dirancang
 | Integrasi | Tujuan | Catatan |
 |---|---|---|
 | SMTP (email) | Notifikasi status permintaan | Gunakan SMTP yang disediakan cPanel/domain BPS, atau layanan pihak ketiga (misal SendGrid/Mailgun) untuk deliverability lebih baik |
-| Meta WhatsApp Cloud API | OTP verifikasi nomor HP pemohon | Template `AUTHENTICATION` dengan tombol salin kode, masa berlaku 5 menit, delivery TTL maksimal 300 detik; token hanya disimpan di environment production |
+| Verihubs SMS OTP V2 | OTP verifikasi nomor HP pemohon | Kode dibuat dan diverifikasi aplikasi; App ID/API key hanya disimpan di environment production, tanpa retry otomatis |
+| Fonnte WhatsApp | Demo OTP pada environment local/testing | Sesi perangkat tertaut; dilarang untuk production BPS dan bukan fallback otomatis |
 
 ## 6. Keamanan
 
@@ -99,7 +100,7 @@ Beberapa layer di bawah tidak sepenuhnya tersedia di shared hosting cPanel (misa
 - **Pemohon publik/instansi**: OTP nomor HP (tanpa password)
 - **Internal (staf/kasi/kabid/admin)**: email + password (Laravel default auth, bcrypt)
 - **Otorisasi**: Laravel Policies + `spatie/laravel-permission` berbasis role (lihat 8.8)
-- Halaman **Daftar Pemohon** mengumpulkan profil dan nomor WhatsApp, sedangkan **Masuk Pemohon** hanya meminta nomor WhatsApp. Keduanya memakai mesin OTP dan pembatasan per nomor yang sama.
+- Halaman **Daftar Pemohon** mengumpulkan profil dan nomor HP, sedangkan **Masuk Pemohon** hanya meminta nomor HP. Keduanya memakai mesin OTP SMS dan pembatasan per nomor yang sama.
 - Keberadaan akun baru diperiksa setelah OTP valid. Nomor baru dari alur Masuk diberi bukti verifikasi singkat untuk melengkapi profil tanpa OTP kedua sehingga endpoint awal tidak menjadi sarana enumerasi akun.
 - `pemohon_id` dalam session menjadi identitas publik yang otoritatif. Middleware selalu memuat ulang model terverifikasi dan controller membatasi permintaan/unduhan melalui relasi kepemilikan pemohon tersebut.
 - ID session dirotasi setelah autentikasi dan saat keluar. Logout pemohon memakai `POST` + CSRF dan tidak mengakhiri guard internal petugas.
@@ -148,8 +149,33 @@ Beberapa layer di bawah tidak sepenuhnya tersedia di shared hosting cPanel (misa
 - Baseline: Laravel log (`storage/logs/laravel.log`), dicek manual atau via cron alert sederhana
 - **Rekomendasi**: integrasi **Sentry** (tersedia free tier, kompatibel dengan shared hosting karena hanya butuh package Composer + API key, tidak butuh server tambahan) untuk pelacakan error real-time dan notifikasi
 
-### 8.13 Availability & Recovery
+### 8.13 Perubahan Provider OTP ke SMS (24 Agustus 2026)
+
+- Komponen **Meta WhatsApp API** pada diagram merupakan desain awal. Kanal OTP aktif diganti menjadi **Verihubs SMS OTP V2**; adapter WhatsApp tetap tersedia hanya untuk rollback terkontrol.
+- `PengirimOtpManager` memilih adapter berdasarkan `OTP_DRIVER`. Development/testing menggunakan `log`, sedangkan production menggunakan `sms` setelah kredensial dan Sender ID aktif.
+- `PengirimOtpSms` memanggil endpoint HTTPS Verihubs secara sinkron karena shared hosting tidak memiliki worker permanen. Adapter mengirim nomor kanonis `628...`, kode buatan aplikasi, template bermerek SIPERMINDA, TTL maksimal 300 detik, dan challenge tetap.
+- Provider tidak menjadi sumber kebenaran autentikasi: aplikasi tetap memvalidasi hash OTP, kedaluwarsa, jumlah percobaan, race, dan konsumsi kode secara atomik.
+- Karena endpoint Verify OTP Verihubs tidak dipanggil, status transaksi provider dapat menjadi **Not Verified** walaupun login lokal berhasil; audit autentikasi aplikasi menjadi sumber kebenaran.
+- Timeout/response provider gagal tertutup dan tidak memicu retry otomatis. Token, API key, OTP, serta nomor lengkap tidak boleh ditulis ke log.
+
+### 8.14 Availability & Recovery
 - **Backup**: kombinasi backup otomatis dari cPanel (biasanya tersedia di paket DomaiNesia) + `mysqldump` terjadwal via cron sebagai lapisan kedua
 - **Monitoring uptime**: layanan gratis seperti UptimeRobot untuk memantau ketersediaan situs dan mendapat alert jika down
 - **Recovery plan**: dokumentasikan langkah restore (database dari backup `.sql`, file dari backup cPanel) dan uji coba restore secara berkala, bukan hanya mengandalkan backup tanpa pernah diuji
 - **Keterbatasan**: shared hosting umumnya tidak punya SLA uptime tinggi seperti cloud provider besar — perlu disadari sebagai risiko yang diterima (accepted risk) pada tahap awal sistem ini
+
+### 8.15 Klarifikasi Permintaan (25 Agustus 2026)
+
+- Klarifikasi disimpan terpisah pada `permintaan_klarifikasi`, bukan dicampur ke log approval, agar beberapa putaran pertanyaan dan jawaban tidak menimpa hasil approval per tahap.
+- Permintaan memakai status sementara `menunggu_info_pemohon`. Tahap asal berada pada record klarifikasi dan menentukan status tujuan setelah jawaban secara server-side.
+- Seluruh mutasi meminta/menjawab memakai transaksi dan row lock. Hanya approver tahap aktif yang dapat meminta dan hanya `pemohon_id` pemilik yang dapat menjawab.
+- `pertanyaan` dan `jawaban` boleh tampil kepada pemohon; `catatan_internal` hanya dimuat pada tampilan internal.
+- Lampiran belum didukung agar storage privat, validasi MIME, pemindaian malware, serta retensi dapat dirancang terlebih dahulu.
+
+### 8.16 Adapter Fonnte Khusus Demo (25 Agustus 2026)
+
+- `PengirimOtpManager` dapat memilih adapter `fonnte` saat `OTP_DRIVER=fonnte`, tetapi adapter hanya menerima `APP_ENV=local` atau `testing`. Environment lainnya, khususnya production, wajib menolak driver tersebut dan gagal tertutup.
+- Adapter mengirim request HTTPS sinkron ke endpoint Fonnte yang dikunci di konfigurasi aplikasi, memakai nomor kanonis `628...`, token dari environment, template pesan bermerek SIPERMINDA, dan timeout pendek tanpa retry otomatis.
+- Fonnte bergantung pada sesi perangkat WhatsApp yang ditautkan melalui QR. Ketersediaan sesi, kebijakan platform, dan tata kelolanya belum memenuhi kebutuhan kanal resmi BPS; nomor khusus demo harus dipisahkan dari nomor pribadi petugas.
+- Fonnte tidak menjadi fallback otomatis untuk Verihubs atau Meta. Provider hanya mengangkut pesan, sedangkan hash, kedaluwarsa, pembatasan percobaan, dan konsumsi OTP secara atomik tetap dikelola aplikasi.
+- Token, kode OTP, dan nomor lengkap tidak boleh ditulis ke log. Respons API yang berhasil tidak dianggap sebagai bukti pesan telah sampai ke perangkat.

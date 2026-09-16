@@ -26,19 +26,57 @@ SIPERMINDA adalah Sistem Permintaan Data BPS Kabupaten Padang Lawas. Aplikasi in
 
 ### Akun pemohon publik
 
-Pemohon dari masyarakat atau instansi memakai akun tanpa password berbasis nomor WhatsApp:
+Pemohon dari masyarakat atau instansi memakai akun tanpa password berbasis nomor HP:
 
-- Pemohon baru membuka `/daftar`, mengisi profil, lalu memverifikasi OTP WhatsApp.
-- Pemohon yang sudah terdaftar membuka `/masuk` dan cukup memasukkan nomor WhatsApp serta OTP.
+- Pemohon baru membuka `/daftar`, mengisi profil, lalu memverifikasi OTP SMS.
+- Pemohon yang sudah terdaftar membuka `/masuk` dan cukup memasukkan nomor HP serta OTP SMS.
 - Jika nomor yang belum terdaftar masuk dari halaman Masuk, profil baru diminta setelah nomor berhasil diverifikasi. Sistem tidak mengungkap keberadaan akun sebelum OTP valid.
 - Setelah masuk, pemohon dapat membuka `/akun/permintaan` untuk melihat permintaan miliknya, mengajukan permintaan baru, dan mengunduh hasil yang sudah tersedia.
 - Tombol Keluar mengakhiri sesi pemohon melalui request `POST`; akun internal petugas tetap menggunakan `/internal/login` dengan email dan password.
 
 Identitas publik tetap memakai tabel `pemohon`; tidak diperlukan password atau akun tambahan pada tabel `users`. Nomor disimpan dalam format kanonis `628...`, sementara format `08...`, `62...`, dan `+62...` tetap diterima saat input.
 
-### OTP WhatsApp
+### Informasi tambahan permintaan
+
+Pada setiap tahap approval, petugas yang berwenang dapat meminta informasi tambahan. Tiket akan berstatus **Menunggu Info Pemohon** sampai pemohon pemiliknya membuka detail pada `/akun/permintaan`, mengirim jawaban, dan tiket kembali otomatis ke tahap yang meminta. Pertanyaan, jawaban, peminta, dan waktunya disimpan pada `permintaan_klarifikasi`; catatan internal tidak pernah ditampilkan kepada pemohon.
+
+Versi awal menerima jawaban teks tanpa lampiran. Ini disengaja sampai allowlist tipe file, pemindaian malware, kuota, dan retensi dokumen pendukung ditetapkan.
+
+### OTP SMS
 
 Pada environment `local`, gunakan `OTP_DRIVER=log` agar OTP hanya ditulis ke log lokal. Driver ini otomatis ditolak pada production.
+
+Kanal production aktif menggunakan Verihubs SMS OTP V2. Integrasi mempertahankan kode 6 digit, hash, TTL maksimal 5 menit, rate limit, dan verifikasi atomik yang dikelola aplikasi.
+
+1. Buat dan aktifkan akun Verihubs, buat aplikasi, lalu siapkan layanan SMS OTP dan Sender ID **SIPERMINDA**. Sender ID harus disetujui operator sebelum go-live.
+2. Salin konfigurasi SMS dari `.env.example`, atur `OTP_DRIVER=sms`, lalu isi `VERIHUBS_APP_ID` serta `VERIHUBS_API_KEY` langsung pada `.env` production.
+3. Pertahankan `OTP_EXPIRES_MINUTES=5` dan template yang memuat nama SIPERMINDA serta variabel literal `$OTP`. Alamat API Verihubs dikunci di kode agar kredensial tidak terkirim ke host lain akibat salah konfigurasi.
+4. Gunakan `VERIHUBS_SANDBOX=true` hanya untuk skenario nomor uji resmi Verihubs. Gunakan `false` untuk pengiriman nyata setelah akun aktif.
+5. Jalankan `php artisan config:clear` atau bangun ulang cache konfigurasi setelah `.env` berubah, lalu uji satu nomor internal sebelum rilis.
+6. Aktifkan cron cPanel untuk menjalankan `php artisan schedule:run` setiap menit. Scheduler menghapus metadata OTP yang telah kedaluwarsa lebih dari `OTP_RETENTION_DAYS` (default 7 hari).
+
+Jangan menyimpan App ID/API key di Git atau mengirimkannya melalui chat. Aplikasi tidak melakukan retry otomatis saat timeout agar tidak menggandakan SMS berbayar. Pengiriman baru dianggap diterima bila provider membalas `201` dengan `session_id`, nomor tujuan, dan OTP yang cocok. Status sampai ke perangkat tetap perlu dipantau dari dashboard/callback provider.
+
+Aplikasi sengaja memverifikasi hash OTP secara lokal agar aturan percobaan, kedaluwarsa, dan konsumsi atomik tetap berada dalam satu sumber kebenaran. Karena endpoint Verify OTP Verihubs tidak dipanggil, transaksi dapat terlihat **Not Verified** di dashboard Verihubs meskipun autentikasi lokal berhasil; gunakan log audit aplikasi sebagai acuan keberhasilan login.
+
+Referensi: [Send OTP V2](https://docs.verihubs.com/reference/send_otp_post_v2), [sandbox SMS OTP](https://docs.verihubs.com/reference/sandbox_send_otp_post_v2), dan [panduan SMS OTP](https://docs.verihubs.com/docs/sms-otp).
+
+### OTP WhatsApp Fonnte (khusus demo)
+
+Fonnte tersedia hanya untuk menguji alur OTP WhatsApp ketika `APP_ENV=local` atau `testing`. Integrasi ini memakai sesi perangkat WhatsApp yang ditautkan melalui QR, sehingga **dilarang digunakan pada production resmi BPS**. Keputusan kanal production tetap Verihubs SMS OTP V2; Fonnte bukan fallback otomatis saat provider lain gagal.
+
+1. Buat perangkat khusus demo di dashboard Fonnte, lalu tautkan nomor WhatsApp yang telah diizinkan melalui menu perangkat tertaut/QR. Hindari memakai nomor pribadi petugas.
+2. Salin konfigurasi Fonnte dari `.env.example`, pastikan `APP_ENV=local`, atur `OTP_DRIVER=fonnte`, lalu isi `FONNTE_TOKEN` langsung pada `.env` lokal. Pertahankan template dengan variabel literal `$OTP` dan timeout yang pendek.
+3. Jalankan `php artisan config:clear`, kemudian uji satu nomor internal. Halaman verifikasi akan menampilkan kanal **WhatsApp (demo)** agar tidak tertukar dengan Meta WhatsApp Cloud API.
+4. Setelah demo selesai, kembalikan driver sesuai environment, putuskan perangkat jika tidak lagi diperlukan, dan rotasi token yang pernah terpapar.
+
+Token Fonnte dapat digunakan untuk mengirim pesan dari perangkat yang terhubung, sehingga tidak boleh disimpan di Git, dikirim melalui chat, ditampilkan pada screenshot, atau dicatat ke log. Endpoint API dikunci di konfigurasi aplikasi dan pengiriman tidak dicoba ulang otomatis agar timeout tidak menghasilkan pesan ganda. Respons sukses provider bukan bukti delivery; hash OTP dan konsumsi atomik di aplikasi tetap menjadi sumber kebenaran autentikasi.
+
+Referensi: [cara menghubungkan perangkat](https://docs.fonnte.com/how-to-connect/), [token API](https://docs.fonnte.com/token-api-key/), dan [API pengiriman pesan](https://docs.fonnte.com/api-send-message/).
+
+### OTP WhatsApp (legacy/rollback)
+
+Adapter Meta WhatsApp tetap tersedia sementara untuk rollback terkontrol, tetapi bukan kanal production utama sejak keputusan 24 Agustus 2026.
 
 Untuk mengaktifkan pengiriman nyata melalui Meta WhatsApp Cloud API:
 
@@ -105,3 +143,10 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## WhatsApp Meta dan Vercel ? keputusan terbaru 12 September 2026
+
+Target saat ini adalah OTP Meta WhatsApp Cloud API serta deployment Vercel dengan Docker/FrankenPHP. Keterangan kanal SMS utama, Meta legacy dan hosting cPanel pada bagian sebelumnya dipertahankan sebagai riwayat keputusan. Set OTP_DRIVER=whatsapp hanya setelah credential dan template Meta siap.
+
+Lihat [panduan setup Meta, checklist environment, storage dan deployment](docs/WHATSAPP_VERCEL.md), serta [.env.production.example](.env.production.example). Panduan mencantumkan hasil verifikasi dan blocker upload 50 MB pada batas payload Vercel; konfigurasi ini belum dinyatakan siap go-live penuh. Database lokal tidak dimigrasikan otomatis dan belum ada push/deploy.

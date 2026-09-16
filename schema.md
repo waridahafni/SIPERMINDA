@@ -96,7 +96,7 @@ Indeks `otp_active_lookup_index` pada `(no_hp, verified_at, created_at)` memperc
 | jenis_data | VARCHAR(255) | misal "KCDA 2025" |
 | tujuan_penggunaan | TEXT | |
 | periode_data | VARCHAR(50), nullable | |
-| status | ENUM('diajukan','diverifikasi_staf','disetujui_kasi','disetujui_kabid','ditolak','data_siap','selesai') | |
+| status | VARCHAR(30) | termasuk `menunggu_info_pemohon` saat menunggu jawaban |
 | file_hasil_path | VARCHAR(255), nullable | diisi setelah petugas upload |
 | uploaded_by | BIGINT, FK → users.id, nullable | petugas yang upload hasil |
 | created_at, updated_at | TIMESTAMP | |
@@ -109,7 +109,7 @@ Indeks `otp_active_lookup_index` pada `(no_hp, verified_at, created_at)` memperc
 | permintaan_data_id | BIGINT, FK → permintaan_data.id | |
 | tahap | ENUM('staf','kasi','kabid') | |
 | approver_id | BIGINT, FK → users.id | |
-| keputusan | ENUM('setuju','tolak','minta_info') | |
+| keputusan | VARCHAR(15) | `setuju` atau `tolak`; klarifikasi disimpan terpisah |
 | catatan | TEXT, nullable | wajib diisi jika tolak |
 | created_at | TIMESTAMP | |
 
@@ -144,6 +144,7 @@ dataset_terbuka ──self-reference (dataset_induk_id, untuk versioning)
 permintaan_data ──< permintaan_approval_log
 permintaan_data ──< unduhan_log
 permintaan_data ──< notifikasi_log
+permintaan_data ──< permintaan_klarifikasi
 ```
 
 ## 12. Indeks yang Disarankan
@@ -152,3 +153,19 @@ permintaan_data ──< notifikasi_log
 - `permintaan_data.nomor_tiket` — unique index (dipakai untuk tracking status)
 - `permintaan_data.status` — index (untuk filter dashboard/daftar permintaan)
 - `dataset_terbuka.kategori_id`, `dataset_terbuka.status` — index (untuk filter katalog)
+
+## 13. Tabel `permintaan_klarifikasi` (Tambahan 25 Agustus 2026)
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | BIGINT, PK | |
+| permintaan_data_id | BIGINT, FK → permintaan_data.id | cascade saat permintaan dihapus |
+| tahap | VARCHAR(10) | `staf`, `kasi`, atau `kabid` |
+| diminta_oleh | BIGINT, FK → users.id, nullable | petugas yang meminta |
+| pertanyaan | TEXT | terlihat oleh pemohon |
+| catatan_internal | TEXT, nullable | hanya terlihat petugas |
+| jawaban | TEXT, nullable | jawaban pemohon pemilik |
+| dijawab_at | TIMESTAMP, nullable | kosong selama masih terbuka |
+| created_at, updated_at | TIMESTAMP | |
+
+Indeks `(permintaan_data_id, dijawab_at)` mempercepat pencarian satu klarifikasi aktif. Keunikan satu pertanyaan terbuka dijaga oleh transaksi dan row lock pada `permintaan_data` agar tetap portable di MySQL/MariaDB dan SQLite test.

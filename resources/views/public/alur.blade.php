@@ -3,11 +3,14 @@
 @section('title', 'Alur Permintaan Data - BPS Kabupaten Padang Lawas')
 
 @section('content')
-    @php($sudahMasuk = session()->has('pemohon_id'))
+    @php
+        $sudahMasuk = session()->has('pemohon_id');
+    @endphp
 
-    <div class="bg-gradient-to-br from-primary-500 to-primary-700 text-white">
+    <div class="relative overflow-hidden bg-gradient-to-br from-secondary-800 via-secondary-700 to-primary-600 text-white">
+        <div class="absolute inset-y-0 right-0 w-1/3 bg-primary-400/10 -skew-x-12" aria-hidden="true"></div>
         <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 text-center">
-            <span class="inline-block bg-white/20 text-white text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4">Panduan Layanan</span>
+            <span class="relative inline-block bg-primary-400/20 border border-primary-200/30 text-white text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4">Panduan Layanan</span>
             <h1 class="text-3xl md:text-5xl font-extrabold leading-tight">Alur Permintaan Data</h1>
             <p class="text-lg md:text-xl text-primary-100 mt-4 max-w-2xl mx-auto">Ikuti langkah-langkah mudah berikut untuk mengajukan permintaan data statistik hingga data Anda diterima.</p>
             <div class="flex flex-wrap justify-center gap-4 mt-8">
@@ -53,7 +56,7 @@
                 [
                     'nomor' => '1',
                     'judul' => 'Daftar atau Masuk',
-                    'deskripsi' => 'Daftar sebagai pemohon baru atau masuk dengan nomor WhatsApp yang sudah terdaftar. Kode OTP dikirim melalui WhatsApp untuk mengonfirmasi identitas.',
+                    'deskripsi' => 'Daftar sebagai pemohon baru atau masuk dengan nomor HP yang sudah terdaftar. Kode OTP dikirim ke nomor tersebut untuk mengonfirmasi identitas.',
                     'warna' => 'bg-primary-500',
                     'lingkaran' => 'ring-primary-200',
                     'ikon' => 'M12 11c0 3.517-1.009 6.799-2.753 8.571m2.753-8.571a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zm6 0c0 3.517-1.009 6.799-2.753 8.571m2.753-8.571a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z',
@@ -62,32 +65,32 @@
                     'nomor' => '2',
                     'judul' => 'Ajukan Permintaan Data',
                     'deskripsi' => 'Isi formulir kebutuhan data statistik Anda. Sistem otomatis menerbitkan nomor tiket untuk pelacakan.',
-                    'warna' => 'bg-secondary-500',
-                    'lingkaran' => 'ring-secondary-200',
+                    'warna' => 'bg-primary-500',
+                    'lingkaran' => 'ring-primary-200',
                     'ikon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
                 ],
                 [
                     'nomor' => '3',
                     'judul' => 'Permintaan Diverifikasi',
                     'deskripsi' => 'Petugas memeriksa kelengkapan dan kejelasan data yang Anda butuhkan.',
-                    'warna' => 'bg-green-600',
-                    'lingkaran' => 'ring-green-200',
+                    'warna' => 'bg-bpsGreen-600',
+                    'lingkaran' => 'ring-bpsGreen-100',
                     'ikon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
                 ],
                 [
                     'nomor' => '4',
                     'judul' => 'Data Disiapkan',
                     'deskripsi' => 'Staf menyiapkan file data sesuai dengan permintaan Anda.',
-                    'warna' => 'bg-blue-600',
-                    'lingkaran' => 'ring-blue-200',
+                    'warna' => 'bg-secondary-600',
+                    'lingkaran' => 'ring-secondary-200',
                     'ikon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
                 ],
                 [
                     'nomor' => '5',
                     'judul' => 'Data Diterima &amp; Diunduh',
                     'deskripsi' => 'Saat data siap, masuk ke akun pemohon yang mengajukan permintaan untuk mengunduh file hasil dengan aman.',
-                    'warna' => 'bg-yellow-500',
-                    'lingkaran' => 'ring-yellow-200',
+                    'warna' => 'bg-bpsOrange-500',
+                    'lingkaran' => 'ring-bpsOrange-100',
                     'ikon' => 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4',
                 ],
             ];
@@ -95,7 +98,7 @@
 
         <div class="max-w-3xl mx-auto mt-12">
             <ol class="relative space-y-10">
-                @foreach($steps as $step)
+                @foreach(($steps ?? []) as $step)
                     <li class="relative flex gap-5">
                         <div class="flex flex-col items-center">
                             <span class="relative z-10 flex items-center justify-center w-14 h-14 rounded-full {{ $step['warna'] }} text-white shadow-lg ring-8 {{ $step['lingkaran'] }}">
@@ -119,7 +122,7 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 mt-16">
-        <div class="bg-gradient-to-br from-secondary-500 to-secondary-700 text-white rounded-3xl shadow-xl p-8 md:p-12 text-center relative overflow-hidden">
+        <div class="bg-gradient-to-br from-secondary-800 to-primary-600 text-white rounded-3xl shadow-xl p-8 md:p-12 text-center relative overflow-hidden border-b-4 border-bpsOrange-500">
             <div class="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full" aria-hidden="true"></div>
             <div class="absolute -bottom-10 -left-10 w-56 h-56 bg-white/10 rounded-full" aria-hidden="true"></div>
             <h2 class="text-2xl md:text-3xl font-bold relative">Siap Mengajukan Permintaan Data?</h2>

@@ -8,13 +8,28 @@
             <h1 class="text-2xl font-bold text-gray-800">Laporan Kinerja Layanan</h1>
             <p class="text-gray-500 text-sm">Ringkasan permintaan, status, dan unduhan data.</p>
         </div>
-        <form method="GET" action="{{ route('internal.laporan') }}" class="flex items-center gap-2">
+        <form method="GET" action="{{ route('internal.laporan') }}" class="flex flex-wrap items-end gap-2">
             <input type="month" name="bulan" value="{{ request('bulan') }}"
                 class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm">
+            <select name="status" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <option value="">Semua status</option>
+                @foreach(['diajukan' => 'Diajukan', 'disetujui_petugas' => 'Disetujui', 'menunggu_info_pemohon' => 'Menunggu info', 'data_siap' => 'Data siap', 'selesai' => 'Selesai', 'ditolak' => 'Ditolak'] as $nilai => $label)
+                    <option value="{{ $nilai }}" @selected(request('status') === $nilai)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <select name="kategori_id" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <option value="">Semua kategori</option>
+                @foreach($kategori as $itemKategori)
+                    <option value="{{ $itemKategori->id }}" @selected((string) request('kategori_id') === (string) $itemKategori->id)>{{ $itemKategori->nama }}</option>
+                @endforeach
+            </select>
+            <input type="date" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}" aria-label="Tanggal mulai" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            <input type="date" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}" aria-label="Tanggal selesai" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
             <button class="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary-600 transition">Filter</button>
-            @if(request('bulan'))
+            @if(request()->query())
                 <a href="{{ route('internal.laporan') }}" class="text-sm text-primary-500 hover:underline">Reset</a>
             @endif
+            <a href="{{ route('internal.laporan.export', request()->query()) }}" class="bg-bpsGreen-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-bpsGreen-600 transition">Export CSV</a>
         </form>
     </div>
 

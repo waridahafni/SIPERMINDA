@@ -9,17 +9,29 @@
         @php
             $badge = match($permintaan->status) {
                 'diajukan' => 'yellow',
-                'diverifikasi_staf' => 'blue',
-                'disetujui_kasi' => 'indigo',
-                'disetujui_kabid' => 'purple',
+                'disetujui_petugas' => 'blue',
+                'menunggu_info_pemohon' => 'amber',
                 'ditolak' => 'red',
                 'data_siap' => 'green',
                 'selesai' => 'teal',
                 default => 'gray'
             };
         @endphp
-        <span class="text-xs font-bold px-3 py-1 rounded-full bg-{{ $badge }}-100 text-{{ $badge }}-800">{{ str_replace('_', ' ', ucfirst($permintaan->status)) }}</span>
+        <span class="text-xs font-bold px-3 py-1 rounded-full bg-{{ $badge }}-100 text-{{ $badge }}-800">
+            {{ $permintaan->status === 'menunggu_info_pemohon' ? 'Menunggu Info Pemohon' : str_replace('_', ' ', ucfirst($permintaan->status)) }}
+        </span>
     </div>
+
+    @if($errors->any())
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" role="alert" aria-labelledby="error-detail-permintaan">
+            <p id="error-detail-permintaan" class="font-semibold">Tindakan belum dapat diproses:</p>
+            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="grid lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
@@ -38,6 +50,49 @@
                 </div>
             </div>
 
+            @if($permintaan->klarifikasi->isNotEmpty())
+                <div class="bg-white rounded-xl shadow-sm border p-6">
+                    <h2 class="font-semibold text-gray-800 mb-4">Riwayat Informasi Tambahan</h2>
+                    <div class="space-y-4">
+                        @foreach($permintaan->klarifikasi as $klarifikasi)
+                            <article class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <p class="text-sm font-semibold text-amber-900">
+                                        Pertanyaan tahap {{ ucfirst($klarifikasi->tahap) }}
+                                    </p>
+                                    <time class="text-xs text-amber-700" datetime="{{ $klarifikasi->created_at->toIso8601String() }}">
+                                        {{ $klarifikasi->created_at->format('d M Y H:i') }}
+                                    </time>
+                                </div>
+                                <p class="mt-2 whitespace-pre-line text-sm text-gray-800">{{ $klarifikasi->pertanyaan }}</p>
+                                <p class="mt-2 text-xs text-gray-500">Diminta oleh {{ $klarifikasi->peminta->name ?? 'Petugas' }}</p>
+
+                                @if($klarifikasi->catatan_internal)
+                                    <div class="mt-3 rounded-md border border-gray-200 bg-white p-3">
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Catatan internal</p>
+                                        <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $klarifikasi->catatan_internal }}</p>
+                                    </div>
+                                @endif
+
+                                @if($klarifikasi->dijawab_at)
+                                    <div class="mt-3 rounded-md border border-green-200 bg-green-50 p-3">
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <p class="text-sm font-semibold text-green-800">Jawaban pemohon</p>
+                                            <time class="text-xs text-green-700" datetime="{{ $klarifikasi->dijawab_at->toIso8601String() }}">
+                                                {{ $klarifikasi->dijawab_at->format('d M Y H:i') }}
+                                            </time>
+                                        </div>
+                                        <p class="mt-1 whitespace-pre-line text-sm text-gray-800">{{ $klarifikasi->jawaban }}</p>
+                                    </div>
+                                @else
+                                    <p class="mt-3 text-sm font-medium text-amber-800">Menunggu jawaban pemohon.</p>
+                                @endif
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white rounded-xl shadow-sm border p-6">
                 <h2 class="font-semibold text-gray-800 mb-4">Timeline Approval</h2>
                 @php
@@ -48,9 +103,7 @@
                         'kabid' => $logTahap->get('kabid'),
                     ];
                     $urutan = [
-                        'staf' => 'Verifikasi Staf',
-                        'kasi' => 'Persetujuan Kasi',
-                        'kabid' => 'Persetujuan Kabid',
+                        'staf' => 'Persetujuan Petugas',
                         'upload' => 'Upload Data',
                     ];
                 @endphp
@@ -77,7 +130,7 @@
                             <div class="pb-6 flex-1">
                                 <p class="font-medium text-gray-800">{{ $label }}</p>
                                 @if($log)
-                                    <p class="text-xs text-gray-500">{{ $log->created_at->format('d M Y H:i') }}</p>
+                                    <p class="text-xs text-gray-500">{{ $log->created_at?->format('d M Y H:i') ?? 'Waktu tidak tersedia' }}</p>
                                     @if($log->catatan)
                                         <p class="text-xs text-gray-600 mt-1">{{ $log->catatan }}</p>
                                     @endif
@@ -118,16 +171,12 @@
                 $user = Auth::user();
                 $tahap = match($permintaan->status) {
                     'diajukan' => 'staf',
-                    'diverifikasi_staf' => 'kasi',
-                    'disetujui_kasi' => 'kabid',
-                    'disetujui_kabid' => 'upload',
+                    'disetujui_petugas' => 'upload',
                     default => null,
                 };
                 $bisaTindak = $tahap && !in_array($tahap, ['upload'])
                     && match($tahap) {
                         'staf' => $user->can('verifikasi-permintaan'),
-                        'kasi' => $user->can('approve-level-1'),
-                        'kabid' => $user->can('approve-level-2'),
                         default => false,
                     };
                 $labelTahap = match($tahap) {
@@ -142,17 +191,52 @@
             @if($bisaTindak)
                 <div class="bg-white rounded-xl shadow-sm border p-6">
                     <h2 class="font-semibold text-gray-800 mb-4">{{ $labelTahap }}</h2>
-                    <form method="POST" action="{{ route('internal.permintaan.keputusan', $permintaan) }}" class="space-y-4">
+                    <form method="POST" action="{{ route('internal.permintaan.keputusan', $permintaan) }}" class="space-y-4"
+                        data-nomor-tiket="{{ $permintaan->nomor_tiket }}"
+                        onsubmit="if (this.dataset.submitting === 'true') return false; const keputusan = event.submitter?.value ?? ''; const aksi = keputusan === 'tolak' ? 'menolak' : (keputusan === 'minta_info' ? 'meminta informasi tambahan untuk' : 'menyetujui'); if (!window.confirm('Anda yakin ingin ' + aksi + ' permintaan ' + this.dataset.nomorTiket + '?')) return false; this.dataset.submitting = 'true'; this.querySelectorAll('[data-tombol-keputusan]').forEach((tombol) => { tombol.style.opacity = '0.5'; tombol.style.pointerEvents = 'none'; tombol.setAttribute('aria-disabled', 'true'); }); this.querySelector('[data-status-proses]').hidden = false; return true;">
                         @csrf
+                        @error('keputusan')
+                            <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{{ $message }}</div>
+                        @enderror
+                        <noscript>
+                            <p class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="alert">Konfirmasi otomatis tidak tersedia karena JavaScript dimatikan. Periksa pilihan Anda dengan teliti sebelum menekan tombol.</p>
+                        </noscript>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
-                            <textarea name="catatan" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm" placeholder="Catatan (wajib jika menolak)"></textarea>
+                            <label for="catatan-keputusan" class="block text-sm font-medium text-gray-700 mb-1">Catatan atau pertanyaan untuk pemohon</label>
+                            <textarea id="catatan-keputusan" name="catatan" rows="3" aria-describedby="catatan-keputusan-bantuan"
+                                @error('catatan') aria-invalid="true" @enderror
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
+                                placeholder="Wajib jika menolak atau meminta informasi tambahan">{{ old('catatan') }}</textarea>
+                            <p id="catatan-keputusan-bantuan" class="mt-1 text-xs text-gray-500">Semua isi kolom ini dapat dilihat pemohon dan dapat dikirim melalui email. Wajib jika menolak atau meminta informasi tambahan.</p>
+                            @error('catatan') <p class="mt-1 text-xs text-red-700" role="alert">{{ $message }}</p> @enderror
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" name="keputusan" value="setuju" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition text-sm">Setujui</button>
-                            <button type="submit" name="keputusan" value="tolak" class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition text-sm">Tolak</button>
+                        <div>
+                            <label for="catatan-internal" class="block text-sm font-medium text-gray-700 mb-1">Catatan internal <span class="font-normal text-gray-500">(opsional)</span></label>
+                            <textarea id="catatan-internal" name="catatan_internal" rows="2"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
+                                placeholder="Hanya disimpan saat meminta info dan tidak ditampilkan kepada pemohon">{{ old('catatan_internal') }}</textarea>
+                            @error('catatan_internal') <p class="mt-1 text-xs text-red-700" role="alert">{{ $message }}</p> @enderror
                         </div>
+                        <div class="grid gap-2 sm:grid-cols-3">
+                            <button type="submit" name="keputusan" value="setuju"
+                                data-tombol-keputusan
+                                class="flex-1 bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition text-sm">Setujui</button>
+                            <button type="submit" name="keputusan" value="tolak"
+                                data-tombol-keputusan
+                                class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition text-sm">Tolak</button>
+                            <button type="submit" name="keputusan" value="minta_info"
+                                data-tombol-keputusan
+                                class="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 transition text-sm">Minta Info</button>
+                        </div>
+                        <p hidden data-status-proses role="status" aria-live="polite" class="text-center text-xs text-gray-500">Memproses keputusan...</p>
                     </form>
+                </div>
+            @endif
+
+            @if($permintaan->status === 'menunggu_info_pemohon')
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-6" role="status">
+                    <h2 class="font-semibold text-amber-900">Menunggu Info Pemohon</h2>
+                    <p class="mt-2 text-sm text-amber-800">Tindakan approval berikutnya tersedia kembali setelah pemohon menjawab pertanyaan.</p>
                 </div>
             @endif
 

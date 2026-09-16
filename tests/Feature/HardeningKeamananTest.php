@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class HardeningKeamananTest extends TestCase
@@ -46,6 +47,21 @@ class HardeningKeamananTest extends TestCase
             'otp.whatsapp.template_name' => 'siperminda_kode_otp',
             'otp.whatsapp.template_language' => 'id',
             'otp.whatsapp.timeout_seconds' => 5,
+        ]);
+    }
+
+    private function gunakanDriverSms(bool $sandbox = false): void
+    {
+        config()->set([
+            'otp.driver' => 'sms',
+            'otp.sms.provider' => 'verihubs',
+            'otp.sms.base_url' => 'https://api.verihubs.com/v2',
+            'otp.sms.app_id' => 'app-pengujian',
+            'otp.sms.api_key' => 'kunci-pengujian',
+            'otp.sms.sandbox' => $sandbox,
+            'otp.sms.template' => 'Kode OTP SIPERMINDA: $OTP. Berlaku 5 menit. Jangan bagikan kode ini.',
+            'otp.sms.challenge' => 'autentikasi_pemohon',
+            'otp.sms.timeout_seconds' => 5,
         ]);
     }
 
@@ -109,7 +125,7 @@ class HardeningKeamananTest extends TestCase
         $this->gunakanDriverWhatsApp();
         Http::fake([
             'https://graph.facebook.com/v99.0/123456789/messages' => Http::response([
-                'messages' => [['id' => 'wamid.pengujian']],
+                'messages' => [['id' => 'wamid.'.Str::uuid()]],
             ]),
         ]);
 
@@ -148,6 +164,229 @@ class HardeningKeamananTest extends TestCase
         $this->assertSame('6281234567890', $otp->no_hp);
         $this->assertTrue(Hash::check($kodeTerkirim, $otp->kode_otp));
         $this->assertNotSame($kodeTerkirim, $otp->kode_otp);
+    }
+
+    public function test_otp_dikirim_melalui_sms_verihubs_dan_hanya_disimpan_sebagai_hash(): void
+    {
+        $this->gunakanDriverSms();
+        Http::fake(fn (ClientRequest $request) => Http::response([
+            'message' => 'OTP sent successfully',
+            'otp' => data_get($request->data(), 'otp'),
+            'msisdn' => data_get($request->data(), 'msisdn'),
+            'session_id' => 'sesi-sms-pengujian',
+            'segment_count' => 1,
+        ], 201));
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567870',
+            'Pemohon SMS',
+        ))->assertRedirect(route('otp.form'))
+            ->assertSessionHas('success', fn (string $pesan): bool => str_contains($pesan, 'SMS'));
+
+        $kodeTerkirim = null;
+
+        Http::assertSent(function (ClientRequest $request) use (&$kodeTerkirim): bool {
+            $payload = $request->data();
+            $kodeTerkirim = data_get($payload, 'otp');
+
+            return $request->url() === 'https://api.verihubs.com/v2/otp/send'
+                && $request->hasHeader('App-ID', 'app-pengujian')
+                && $request->hasHeader('API-Key', 'kunci-pengujian')
+                && $request->hasHeader('Content-Type', 'application/json')
+                && data_get($payload, 'msisdn') === '6281234567870'
+                && data_get($payload, 'template') === 'Kode OTP SIPERMINDA: $OTP. Berlaku 5 menit. Jangan bagikan kode ini.'
+                && data_get($payload, 'time_limit') === '300'
+                && data_get($payload, 'challenge') === 'autentikasi_pemohon';
+        });
+        Http::assertSentCount(1);
+
+        $this->assertMatchesRegularExpression('/^[0-9]{6}$/', $kodeTerkirim);
+
+        $otp = OtpVerification::firstOrFail();
+        $this->assertSame('6281234567870', $otp->no_hp);
+        $this->assertTrue(Hash::check($kodeTerkirim, $otp->kode_otp));
+        $this->assertNotSame($kodeTerkirim, $otp->kode_otp);
+    }
+
+    public function test_sms_sandbox_memakai_endpoint_sandbox(): void
+    {
+        $this->gunakanDriverSms(true);
+        Http::fake(fn (ClientRequest $request) => Http::response([
+            'message' => 'OTP sent successfully',
+            'otp' => data_get($request->data(), 'otp'),
+            'msisdn' => data_get($request->data(), 'msisdn'),
+            'session_id' => 'sesi-sandbox',
+            'segment_count' => 1,
+            'try_count' => 0,
+        ], 201));
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567871',
+            'Pemohon Sandbox',
+        ))->assertSessionHas('success');
+
+        Http::assertSent(fn (ClientRequest $request): bool => $request->url() === 'https://api.verihubs.com/v2/otp/send/sandbox');
+    }
+
+    public function test_respons_sms_tanpa_id_sesi_gagal_tertutup(): void
+    {
+        $this->gunakanDriverSms();
+        Http::fake(fn (ClientRequest $request) => Http::response([
+            'message' => 'OTP sent successfully',
+            'otp' => data_get($request->data(), 'otp'),
+            'msisdn' => data_get($request->data(), 'msisdn'),
+            'segment_count' => 1,
+        ], 201));
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567872',
+            'Pemohon Respons SMS Kosong',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        $this->assertTrue(OtpVerification::firstOrFail()->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_konfigurasi_sms_yang_tidak_lengkap_gagal_tertutup(): void
+    {
+        $this->gunakanDriverSms();
+        config()->set('otp.sms.api_key');
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567873',
+            'Pemohon Tanpa Kunci SMS',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        Http::assertNothingSent();
+        $this->assertTrue(OtpVerification::firstOrFail()->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_konfigurasi_sandbox_sms_yang_salah_gagal_sebelum_http(): void
+    {
+        $this->gunakanDriverSms();
+        config()->set('otp.sms.sandbox', 'treu');
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567876',
+            'Pemohon Sandbox Salah',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        Http::assertNothingSent();
+        $this->assertTrue(OtpVerification::firstOrFail()->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_base_url_sms_tidak_boleh_dialihkan_ke_host_lain(): void
+    {
+        $this->gunakanDriverSms();
+        config()->set('otp.sms.base_url', 'https://contoh.invalid/v2');
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567875',
+            'Pemohon Host SMS Salah',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        Http::assertNothingSent();
+        $this->assertTrue(OtpVerification::firstOrFail()->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_respons_sms_dengan_nomor_tujuan_berbeda_gagal_tertutup(): void
+    {
+        $this->gunakanDriverSms();
+        Http::fake(fn (ClientRequest $request) => Http::response([
+            'message' => 'OTP sent successfully',
+            'otp' => data_get($request->data(), 'otp'),
+            'msisdn' => '6289999999999',
+            'session_id' => 'sesi-nomor-berbeda',
+            'segment_count' => 1,
+        ], 201));
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567877',
+            'Pemohon Respons Nomor Salah',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        $this->assertTrue(OtpVerification::firstOrFail()->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_respons_sms_dengan_otp_berbeda_gagal_tertutup(): void
+    {
+        $this->gunakanDriverSms();
+        Http::fake(fn (ClientRequest $request) => Http::response([
+            'message' => 'OTP sent successfully',
+            'otp' => '000000',
+            'msisdn' => data_get($request->data(), 'msisdn'),
+            'session_id' => 'sesi-otp-berbeda',
+            'segment_count' => 1,
+        ], 201));
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567878',
+            'Pemohon Respons OTP Salah',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        $this->assertTrue(OtpVerification::firstOrFail()->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_kegagalan_provider_sms_tidak_mematikan_otp_lama(): void
+    {
+        $this->gunakanDriverSms();
+        Http::fake([
+            'https://api.verihubs.com/v2/otp/send' => Http::response([
+                'code' => 500,
+            ], 500),
+        ]);
+
+        $otpLama = OtpVerification::create([
+            'no_hp' => '6281234567874',
+            'kode_otp' => Hash::make('111111'),
+            'expired_at' => now()->addMinutes(5),
+            'attempt_count' => 0,
+            'created_at' => now()->subMinute(),
+        ]);
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '+6281234567874',
+            'Pemohon SMS Gagal',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        $this->assertTrue($otpLama->fresh()->expired_at->isFuture());
+
+        $otpBaru = OtpVerification::whereKeyNot($otpLama->id)->firstOrFail();
+        $this->assertTrue($otpBaru->expired_at->lessThanOrEqualTo(now()));
+    }
+
+    public function test_koneksi_sms_putus_tidak_retry_dan_tidak_mematikan_otp_lama(): void
+    {
+        $this->gunakanDriverSms();
+        Http::fake([
+            'https://api.verihubs.com/v2/otp/send' => Http::failedConnection('timeout pengujian SMS'),
+        ]);
+
+        $otpLama = OtpVerification::create([
+            'no_hp' => '6281234567879',
+            'kode_otp' => Hash::make('111111'),
+            'expired_at' => now()->addMinutes(5),
+            'attempt_count' => 0,
+            'created_at' => now()->subMinute(),
+        ]);
+
+        $this->post('/otp/kirim', $this->dataKirimOtp(
+            '081234567879',
+            'Pemohon Timeout SMS',
+        ))->assertSessionHas('error')
+            ->assertSessionMissing('success');
+
+        Http::assertSentCount(1);
+        $this->assertTrue($otpLama->fresh()->expired_at->isFuture());
+
+        $otpBaru = OtpVerification::whereKeyNot($otpLama->id)->firstOrFail();
+        $this->assertTrue($otpBaru->expired_at->lessThanOrEqualTo(now()));
     }
 
     public function test_kegagalan_provider_whatsapp_tidak_mematikan_otp_lama(): void
@@ -227,7 +466,7 @@ class HardeningKeamananTest extends TestCase
     {
         $this->gunakanDriverWhatsApp();
         Http::fake(fn () => Http::response([
-            'messages' => [['id' => 'wamid.pengujian']],
+            'messages' => [['id' => 'wamid.'.Str::uuid()]],
         ]));
 
         foreach (['081234567895', '6281234567895', '+6281234567895'] as $nomorHp) {
@@ -235,6 +474,7 @@ class HardeningKeamananTest extends TestCase
                 $nomorHp,
                 'Pemohon Rate Limit',
             ))->assertSessionHas('success');
+            $this->travel(61)->seconds();
         }
 
         $this->post('/otp/kirim', $this->dataKirimOtp(
@@ -391,7 +631,7 @@ class HardeningKeamananTest extends TestCase
     {
         $this->gunakanDriverWhatsApp();
         Http::fake(fn () => Http::response([
-            'messages' => [['id' => 'wamid.pengujian']],
+            'messages' => [['id' => 'wamid.'.Str::uuid()]],
         ]));
 
         $this->post('/otp/kirim', $this->dataKirimOtp(

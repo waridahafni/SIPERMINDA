@@ -16,7 +16,7 @@ class PengirimOtpLog implements PengirimOtp
         }
 
         if (app()->environment('local')) {
-            Log::info('OTP dikirim melalui driver log lokal.', [
+            Log::stack(['single', 'stderr'])->info('OTP dikirim melalui driver log lokal.', [
                 'nomor_hp' => NomorTeleponIndonesia::samarkan($nomorHp),
                 'kode_otp' => $kode,
                 'kedaluwarsa_menit' => config('otp.kedaluwarsa_menit'),

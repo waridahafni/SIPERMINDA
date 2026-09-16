@@ -6,7 +6,7 @@
     <div class="max-w-lg mx-auto px-4 py-12">
         <div class="bg-white rounded-xl shadow-sm border p-8">
             <h1 class="text-2xl font-bold text-gray-800 text-center">Daftar Pemohon</h1>
-            <p class="text-gray-500 text-center mt-2">Buat akun masyarakat atau instansi menggunakan nomor WhatsApp aktif.</p>
+            <p class="text-gray-500 text-center mt-2">Buat akun masyarakat atau instansi menggunakan nomor HP/WhatsApp aktif.</p>
 
             <form method="POST" action="{{ route('pemohon.daftar.kirim-otp') }}" class="mt-6 space-y-4"
                 x-data="{ jenisPemohon: @js(old('jenis_pemohon', 'publik')), submitting: false }"
@@ -14,7 +14,7 @@
                 @csrf
 
                 <div>
-                    <label for="no_hp" class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
+                    <label for="no_hp" class="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
                     <input id="no_hp" type="tel" name="no_hp" value="{{ old('no_hp') }}" required
                         inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"

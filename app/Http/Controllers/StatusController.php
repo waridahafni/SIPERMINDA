@@ -22,7 +22,7 @@ class StatusController extends Controller
                 ->with('error', 'Masukkan kembali nomor tiket dan nomor HP untuk melihat status.');
         }
 
-        $permintaan->load(['pemohon', 'approvalLog.approver', 'kategori']);
+        $permintaan->load(['pemohon', 'approvalLog.approver', 'klarifikasi', 'kategori']);
 
         return view('public.status.detail', compact('permintaan'));
     }

@@ -23,7 +23,7 @@
                     <li>Gunakan nomor tiket untuk cek status permintaan</li>
                     <li>Proses verifikasi maksimal 3 hari kerja</li>
                     <li>Pembaruan status penting dikirim ke email yang terdaftar, jika tersedia</li>
-                    <li>Kode masuk akun dikirim ke nomor WhatsApp yang terdaftar</li>
+                    <li>Kode masuk akun dikirim ke nomor HP yang terdaftar</li>
                 </ul>
             </div>
 

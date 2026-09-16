@@ -310,6 +310,7 @@ class AutentikasiPemohonTest extends TestCase
                 ->assertSessionMissing('url.intended');
 
             $this->post(route('pemohon.keluar'));
+            $this->travel(61)->seconds();
         }
     }
 

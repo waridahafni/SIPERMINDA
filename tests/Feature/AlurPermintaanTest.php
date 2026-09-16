@@ -99,14 +99,10 @@ class AlurPermintaanTest extends TestCase
         ])->assertSessionHasErrors('not_found');
     }
 
-    public function test_alur_approval_berjenjang_staf_kasi_kabid_dan_upload(): void
+    public function test_petugas_menyetujui_lalu_mengunggah_hasil(): void
     {
         $staf = User::factory()->create();
         $staf->assignRole('staf');
-        $kasi = User::factory()->create();
-        $kasi->assignRole('kasi');
-        $kabid = User::factory()->create();
-        $kabid->assignRole('kabid');
 
         $pemohon = $this->registerPemohon();
         $permintaan = PermintaanData::create([
@@ -118,33 +114,19 @@ class AlurPermintaanTest extends TestCase
             'status' => 'diajukan',
         ]);
 
-        // Tahap 1: Staf menyetujui.
+        // Petugas menyetujui permintaan.
         $this->actingAs($staf)->post("/internal/permintaan/{$permintaan->id}/keputusan", [
             'keputusan' => 'setuju',
         ])->assertRedirect(route('internal.permintaan.index'));
 
-        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'diverifikasi_staf']);
+        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'disetujui_petugas']);
         $this->assertDatabaseHas('permintaan_approval_log', [
             'permintaan_data_id' => $permintaan->id,
             'tahap' => 'staf',
             'keputusan' => 'setuju',
         ]);
 
-        // Tahap 2: Kasi menyetujui.
-        $this->actingAs($kasi)->post("/internal/permintaan/{$permintaan->id}/keputusan", [
-            'keputusan' => 'setuju',
-        ])->assertRedirect(route('internal.permintaan.index'));
-
-        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'disetujui_kasi']);
-
-        // Tahap 3: Kabid menyetujui -> disetujui_kabid (final approval).
-        $this->actingAs($kabid)->post("/internal/permintaan/{$permintaan->id}/keputusan", [
-            'keputusan' => 'setuju',
-        ])->assertRedirect(route('internal.permintaan.index'));
-
-        $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'disetujui_kabid']);
-
-        // Tahap 4: Staf upload hasil -> data siap.
+        // Petugas langsung mengunggah hasil setelah menyetujui.
         $file = UploadedFile::fake()->create('hasil.xlsx', 100);
         $this->actingAs($staf)->post("/internal/permintaan/{$permintaan->id}/upload", [
             'file_hasil' => $file,
@@ -225,6 +207,12 @@ class AlurPermintaanTest extends TestCase
         $this->assertEquals('setuju', $log->keputusan);
         $this->assertEquals('Kelengkapan ok', $log->catatan);
         $this->assertEquals($staf->id, $log->approver_id);
+        $this->assertInstanceOf(\DateTimeInterface::class, $log->created_at);
+
+        $this->actingAs($staf)
+            ->get(route('internal.permintaan.show', $permintaan))
+            ->assertOk()
+            ->assertSee($log->created_at->format('d M Y H:i'));
     }
 
     public function test_permintaan_data_siap_dapat_ditandai_selesai(): void

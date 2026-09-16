@@ -22,7 +22,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <p class="text-2xl font-bold text-gray-800">{{ ($perStatus['diajukan'] ?? 0) + ($perStatus['diverifikasi_staf'] ?? 0) + ($perStatus['disetujui_kasi'] ?? 0) + ($perStatus['disetujui_kabid'] ?? 0) }}</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ ($perStatus['diajukan'] ?? 0) + ($perStatus['disetujui_petugas'] ?? 0) + ($perStatus['menunggu_info_pemohon'] ?? 0) }}</p>
                     <p class="text-sm text-gray-500">Diproses</p>
                 </div>
             </div>
@@ -53,6 +53,28 @@
         </div>
     </div>
 
+    <section class="mt-8 rounded-xl border border-orange-200 bg-orange-50 p-5" aria-labelledby="sla-layanan">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h3 id="sla-layanan" class="font-semibold text-orange-900">Perhatian SLA Layanan</h3>
+                <p class="mt-1 text-sm text-orange-800">Target penanganan permintaan aktif: maksimal {{ $slaHariKerja }} hari kerja.</p>
+            </div>
+            <span class="rounded-full bg-orange-600 px-3 py-1 text-sm font-bold text-white">{{ $permintaanMelewatiSla->count() }} perlu ditindaklanjuti</span>
+        </div>
+        @if($permintaanMelewatiSla->isNotEmpty())
+            <ul class="mt-4 divide-y divide-orange-200 rounded-lg border border-orange-200 bg-white text-sm">
+                @foreach($permintaanMelewatiSla as $permintaanSla)
+                    <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                        <span><span class="font-mono font-semibold text-primary-700">{{ $permintaanSla->nomor_tiket }}</span> · {{ $permintaanSla->pemohon->nama }}</span>
+                        <a href="{{ route('internal.permintaan.show', $permintaanSla) }}" class="font-semibold text-primary-600 hover:underline">Tinjau</a>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="mt-3 text-sm text-orange-800">Tidak ada permintaan aktif yang melewati target saat ini.</p>
+        @endif
+    </section>
+
     <div class="mt-8 bg-white rounded-xl shadow-sm border">
         <div class="px-6 py-4 border-b">
             <h3 class="font-semibold text-gray-800">Permintaan Terbaru</h3>
@@ -78,16 +100,17 @@
                                 @php
                                     $badge = match($p->status) {
                                         'diajukan' => 'yellow',
-                                        'diverifikasi_staf' => 'blue',
-                                        'disetujui_kasi' => 'indigo',
-                                        'disetujui_kabid' => 'purple',
+                                        'disetujui_petugas' => 'blue',
+                                        'menunggu_info_pemohon' => 'amber',
                                         'ditolak' => 'red',
                                         'data_siap' => 'green',
                                         'selesai' => 'teal',
                                         default => 'gray'
                                     };
                                 @endphp
-                                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-{{ $badge }}-100 text-{{ $badge }}-800">{{ str_replace('_', ' ', ucfirst($p->status)) }}</span>
+                                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-{{ $badge }}-100 text-{{ $badge }}-800">
+                                    {{ $p->status === 'menunggu_info_pemohon' ? 'Menunggu Info Pemohon' : str_replace('_', ' ', ucfirst($p->status)) }}
+                                </span>
                             </td>
                             <td class="px-6 py-3 text-gray-500">{{ $p->created_at->format('d M Y') }}</td>
                         </tr>

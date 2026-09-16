@@ -58,6 +58,11 @@ class PermintaanData extends Model
         return $this->hasMany(PermintaanApprovalLog::class);
     }
 
+    public function klarifikasi(): HasMany
+    {
+        return $this->hasMany(PermintaanKlarifikasi::class)->oldest('id');
+    }
+
     public function unduhanLog(): HasMany
     {
         return $this->hasMany(UnduhanLog::class);

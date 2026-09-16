@@ -28,9 +28,8 @@
                     @php
                         $labelStatus = match($item->status) {
                             'diajukan' => 'Diajukan',
-                            'diverifikasi_staf' => 'Diverifikasi Staf',
-                            'disetujui_kasi' => 'Disetujui Kasi',
-                            'disetujui_kabid' => 'Disetujui Kabid',
+                            'disetujui_petugas' => 'Disetujui Petugas',
+                            'menunggu_info_pemohon' => 'Perlu Jawaban Anda',
                             'ditolak' => 'Ditolak',
                             'data_siap' => 'Data Siap',
                             'selesai' => 'Selesai',
@@ -39,7 +38,8 @@
                         $warnaStatus = match($item->status) {
                             'ditolak' => 'bg-red-100 text-red-700',
                             'data_siap', 'selesai' => 'bg-green-100 text-green-700',
-                            'disetujui_kasi', 'disetujui_kabid' => 'bg-indigo-100 text-indigo-700',
+                            'menunggu_info_pemohon' => 'bg-amber-100 text-amber-800',
+                            'disetujui_petugas' => 'bg-blue-100 text-blue-700',
                             default => 'bg-yellow-100 text-yellow-700',
                         };
                     @endphp
@@ -62,8 +62,8 @@
 
                         <div class="mt-5 flex flex-wrap gap-3">
                             <a href="{{ route('pemohon.permintaan.show', $item) }}"
-                                class="inline-flex border border-primary-500 text-primary-600 px-4 py-2.5 rounded-lg font-semibold hover:bg-primary-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 transition">
-                                Lihat Detail
+                                class="inline-flex border px-4 py-2.5 rounded-lg font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 transition {{ $item->status === 'menunggu_info_pemohon' ? 'border-amber-500 bg-amber-50 text-amber-800 hover:bg-amber-100 focus-visible:ring-amber-500' : 'border-primary-500 text-primary-600 hover:bg-primary-50 focus-visible:ring-primary-500' }}">
+                                {{ $item->status === 'menunggu_info_pemohon' ? 'Jawab Info Tambahan' : 'Lihat Detail' }}
                             </a>
                             @if(in_array($item->status, ['data_siap', 'selesai'], true) && $item->file_hasil_path)
                                 <a href="{{ route('permintaan.unduh', $item) }}"

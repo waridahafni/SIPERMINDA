@@ -15,9 +15,8 @@
             <div class="flex flex-wrap gap-2 text-sm">
                 <a href="{{ route('internal.permintaan.index') }}" @click="tab = 'semua'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'semua' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Semua</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'diajukan']) }}" @click="tab = 'diajukan'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'diajukan' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Diajukan</a>
-                <a href="{{ route('internal.permintaan.index', ['status' => 'diverifikasi_staf']) }}" @click="tab = 'diverifikasi_staf'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'diverifikasi_staf' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Diverifikasi</a>
-                <a href="{{ route('internal.permintaan.index', ['status' => 'disetujui_kasi']) }}" @click="tab = 'disetujui_kasi'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'disetujui_kasi' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Disetujui Kasi</a>
-                <a href="{{ route('internal.permintaan.index', ['status' => 'disetujui_kabid']) }}" @click="tab = 'disetujui_kabid'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'disetujui_kabid' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Disetujui Kabid</a>
+                <a href="{{ route('internal.permintaan.index', ['status' => 'disetujui_petugas']) }}" @click="tab = 'disetujui_petugas'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'disetujui_petugas' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Disetujui Petugas</a>
+                <a href="{{ route('internal.permintaan.index', ['status' => 'menunggu_info_pemohon']) }}" @click="tab = 'menunggu_info_pemohon'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'menunggu_info_pemohon' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Menunggu Info</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'data_siap']) }}" @click="tab = 'data_siap'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'data_siap' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Data Siap</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'ditolak']) }}" @click="tab = 'ditolak'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'ditolak' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Ditolak</a>
             </div>
@@ -45,16 +44,17 @@
                                 @php
                                     $badge = match($p->status) {
                                         'diajukan' => 'yellow',
-                                        'diverifikasi_staf' => 'blue',
-                                        'disetujui_kasi' => 'indigo',
-                                        'disetujui_kabid' => 'purple',
+                                        'disetujui_petugas' => 'blue',
+                                        'menunggu_info_pemohon' => 'amber',
                                         'ditolak' => 'red',
                                         'data_siap' => 'green',
                                         'selesai' => 'teal',
                                         default => 'gray'
                                     };
                                 @endphp
-                                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-{{ $badge }}-100 text-{{ $badge }}-800">{{ str_replace('_', ' ', ucfirst($p->status)) }}</span>
+                                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-{{ $badge }}-100 text-{{ $badge }}-800">
+                                    {{ $p->status === 'menunggu_info_pemohon' ? 'Menunggu Info Pemohon' : str_replace('_', ' ', ucfirst($p->status)) }}
+                                </span>
                             </td>
                             <td class="px-6 py-3 text-gray-500">{{ $p->created_at->format('d M Y') }}</td>
                             <td class="px-6 py-3 text-center">

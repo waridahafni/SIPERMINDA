@@ -21,6 +21,7 @@ class OtpVerification extends Model
     protected function casts(): array
     {
         return [
+            'created_at' => 'datetime',
             'expired_at' => 'datetime',
             'verified_at' => 'datetime',
         ];

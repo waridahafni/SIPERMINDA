@@ -7,9 +7,9 @@ use InvalidArgumentException;
 final class NomorTeleponIndonesia
 {
     /**
-     * Mengubah 08..., 628..., atau +628... menjadi format WhatsApp 628....
+     * Mengubah 08..., 628..., atau +628... menjadi format kanonis 628....
      */
-    public static function keFormatWhatsApp(string $nomorHp): string
+    public static function kanonis(string $nomorHp): string
     {
         $nomorHp = trim($nomorHp);
 
@@ -30,9 +30,25 @@ final class NomorTeleponIndonesia
         return $angka;
     }
 
+    /**
+     * Alias kompatibilitas untuk integrasi WhatsApp lama.
+     */
+    public static function keFormatWhatsApp(string $nomorHp): string
+    {
+        return self::kanonis($nomorHp);
+    }
+
+    /**
+     * Verihubs menerima nomor internasional tanpa tanda tambah.
+     */
+    public static function keFormatSms(string $nomorHp): string
+    {
+        return self::kanonis($nomorHp);
+    }
+
     public static function samarkan(string $nomorHp): string
     {
-        $angka = self::keFormatWhatsApp($nomorHp);
+        $angka = self::kanonis($nomorHp);
 
         return str_repeat('*', max(0, strlen($angka) - 4)).substr($angka, -4);
     }
@@ -44,7 +60,7 @@ final class NomorTeleponIndonesia
      */
     public static function varianPenyimpanan(string $nomorHp): array
     {
-        $angka = self::keFormatWhatsApp($nomorHp);
+        $angka = self::kanonis($nomorHp);
 
         return [
             $angka,
@@ -55,6 +71,6 @@ final class NomorTeleponIndonesia
 
     public static function kunciRateLimit(string $nomorHp): string
     {
-        return hash_hmac('sha256', self::keFormatWhatsApp($nomorHp), (string) config('app.key'));
+        return hash_hmac('sha256', self::kanonis($nomorHp), (string) config('app.key'));
     }
 }

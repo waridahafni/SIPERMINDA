@@ -7,9 +7,9 @@ use App\Models\KategoriData;
 use App\Models\PermintaanData;
 use App\Models\UnduhanLog;
 use App\Rules\NomorHpIndonesia;
+use App\Support\DokumenStorage;
 use App\Support\NomorTeleponIndonesia;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PublicController extends Controller
@@ -26,6 +26,16 @@ class PublicController extends Controller
     public function alur()
     {
         return view('public.alur');
+    }
+
+    public function privasi()
+    {
+        return view('public.privasi');
+    }
+
+    public function ketentuan()
+    {
+        return view('public.ketentuan');
     }
 
     public function katalog(Request $request)
@@ -64,7 +74,7 @@ class PublicController extends Controller
     {
         abort_unless($dataset->status === 'aktif', 404);
 
-        if (! Storage::disk('local')->exists($dataset->file_path)) {
+        if (! DokumenStorage::disk()->exists($dataset->file_path)) {
             abort(404, 'File dataset tidak ditemukan di penyimpanan.');
         }
 
@@ -77,7 +87,7 @@ class PublicController extends Controller
         $ekstensi = pathinfo($dataset->file_path, PATHINFO_EXTENSION);
         $namaUnduhan = Str::slug($dataset->judul).'.'.$ekstensi;
 
-        return response()->download(Storage::disk('local')->path($dataset->file_path), $namaUnduhan);
+        return DokumenStorage::unduh($dataset->file_path, $namaUnduhan);
     }
 
     public function cekStatus()
@@ -109,7 +119,7 @@ class PublicController extends Controller
                     'nomor_tiket' => $nomorTiket,
                     'no_hp' => $nomorHp,
                 ])
-                ->withErrors(['not_found' => 'Data permintaan tidak ditemukan. Periksa kembali nomor tiket dan nomor WhatsApp.']);
+                ->withErrors(['not_found' => 'Data permintaan tidak ditemukan. Periksa kembali nomor tiket dan nomor HP.']);
         }
 
         $request->session()->put("akses_status.{$permintaan->id}", now()->addMinutes(10)->timestamp);

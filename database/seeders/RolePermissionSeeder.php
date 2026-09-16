@@ -14,8 +14,7 @@ class RolePermissionSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $permissions = [
-            'approve-level-1', 'approve-level-2', 'upload-dataset',
-            'manage-users', 'verifikasi-permintaan', 'upload-hasil', 'lihat-laporan',
+            'upload-dataset', 'manage-users', 'verifikasi-permintaan', 'upload-hasil', 'lihat-laporan',
             'lihat-dashboard', 'lihat-permintaan',
         ];
 
@@ -27,16 +26,15 @@ class RolePermissionSeeder extends Seeder
         $staf->syncPermissions(['lihat-dashboard', 'lihat-permintaan', 'verifikasi-permintaan', 'upload-dataset', 'upload-hasil']);
 
         $kasi = Role::firstOrCreate(['name' => 'kasi', 'guard_name' => 'web']);
-        $kasi->syncPermissions(['lihat-dashboard', 'lihat-permintaan', 'approve-level-1', 'lihat-laporan']);
+        $kasi->syncPermissions(['lihat-dashboard', 'lihat-permintaan', 'lihat-laporan']);
 
         $kabid = Role::firstOrCreate(['name' => 'kabid', 'guard_name' => 'web']);
-        $kabid->syncPermissions(['lihat-dashboard', 'lihat-permintaan', 'approve-level-2', 'lihat-laporan']);
+        $kabid->syncPermissions(['lihat-dashboard', 'lihat-permintaan', 'lihat-laporan']);
 
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $admin->syncPermissions([
             'manage-users', 'upload-dataset', 'lihat-laporan',
             'verifikasi-permintaan', 'upload-hasil',
-            'approve-level-1', 'approve-level-2',
             'lihat-dashboard', 'lihat-permintaan',
         ]);
 

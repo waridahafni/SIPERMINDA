@@ -5,12 +5,16 @@ namespace App\Providers;
 use App\Contracts\PengirimOtp;
 use App\Models\Pemohon;
 use App\Services\Otp\PengirimOtpManager;
+use App\Support\R2SignatureV4;
+use Aws\CommandInterface;
+use Aws\Middleware;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +28,21 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Storage::extend('s3', function ($app, array $config) {
+            $config['signature_provider'] = static fn ($version, $service, $region) => new R2SignatureV4($service, $region);
+            $disk = $app['filesystem']->createS3Driver($config);
+            // Flysystem menambahkan ACL private secara otomatis. R2 tidak mendukung ACL.
+            $disk->getClient()->getHandlerList()->appendInit(Middleware::mapCommand(
+                static function (CommandInterface $command): CommandInterface {
+                    unset($command['ACL']);
+
+                    return $command;
+                }
+            ), 'siperminda.no-acl');
+
+            return $disk;
+        });
+
         Blade::withoutDoubleEncoding();
 
         $responsTerlaluBanyak = static fn (Request $request, array $headers): Response => response(
@@ -51,7 +70,11 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->make(ExceptionHandler::class)->renderable(
             static function (LockTimeoutException $exception, Request $request): ?Response {
-                if (! $request->routeIs('permintaan.create', 'permintaan.store')) {
+                if (! $request->routeIs(
+                    'permintaan.create',
+                    'permintaan.store',
+                    'pemohon.permintaan.info-tambahan.jawab'
+                )) {
                     return null;
                 }
 

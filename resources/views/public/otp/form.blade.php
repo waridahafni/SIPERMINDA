@@ -29,7 +29,7 @@
             ">
             <h1 class="text-2xl font-bold text-gray-800 text-center">Verifikasi Kode OTP</h1>
             <p class="text-gray-500 text-center mt-2">
-                Kode dikirim melalui {{ $kanalOtp }} ke nomor <strong>{{ $nomorTersamar }}</strong>
+                Verifikasi melalui {{ $kanalOtp }} untuk nomor <strong>{{ $nomorTersamar }}</strong>
                 untuk {{ $modeOtp === 'masuk' ? 'masuk' : 'menyelesaikan pendaftaran' }}.
             </p>
 

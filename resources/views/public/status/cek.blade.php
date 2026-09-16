@@ -6,7 +6,7 @@
     <div class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 py-8">
             <h1 class="text-2xl font-bold text-gray-800">Cek Status Permintaan</h1>
-            <p class="text-gray-500 mt-1">Masukkan nomor tiket dan nomor WhatsApp yang digunakan saat pengajuan.</p>
+            <p class="text-gray-500 mt-1">Masukkan nomor tiket dan nomor HP yang digunakan saat pengajuan.</p>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
                 </div>
 
                 <div>
-                    <label for="no_hp" class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
+                    <label for="no_hp" class="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
                     <input id="no_hp" type="tel" name="no_hp" value="{{ old('no_hp', session('pemohon_otp')) }}" required inputmode="tel" autocomplete="tel" placeholder="Contoh: 081234567890"
                         @error('no_hp') aria-invalid="true" aria-describedby="no_hp-error" @enderror
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">

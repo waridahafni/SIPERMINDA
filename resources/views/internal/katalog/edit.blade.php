@@ -56,7 +56,7 @@
                             <p class="text-sm text-gray-500 mb-2">File saat ini: {{ $dataset->file_path }}</p>
                         @endif
                     @endif
-                    <input type="file" name="file" accept=".pdf,.xls,.xlsx,.zip,.csv,.json" {{ request('revisi') ? 'required' : '' }}
+                    <input type="file" @unless(\App\Services\UnggahDokumen::langsung()) name="file" @endunless accept=".pdf,.xls,.xlsx,.zip,.csv,.json" {{ request('revisi') ? 'required' : '' }}
                         class="w-full text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:bg-primary-50 file:text-primary-700 file:font-medium">
                     @if(!request('revisi'))
                         <p class="text-xs text-gray-400 mt-1">Kosongkan jika tidak ingin mengubah file.</p>
@@ -64,6 +64,7 @@
                 </div>
             </div>
 
+            @include('internal.partials.unggah-langsung', ['tujuan' => request('revisi') ? 'katalog-revisi' : 'katalog-edit', 'target' => $dataset->id])
             <div class="flex gap-3">
                 <button type="submit" class="bg-primary-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary-600 transition shadow">{{ request('revisi') ? 'Simpan Revisi' : 'Update Dataset' }}</button>
                 <a href="{{ route('internal.katalog.index') }}" class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition">Batal</a>

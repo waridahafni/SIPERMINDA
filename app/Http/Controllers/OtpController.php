@@ -9,8 +9,10 @@ use App\Http\Requests\DaftarPemohonRequest;
 use App\Http\Requests\LengkapiPendaftaranRequest;
 use App\Http\Requests\MasukPemohonRequest;
 use App\Http\Requests\StorePermintaanRequest;
+use App\Http\Requests\VerifikasiOtpRequest;
 use App\Models\OtpVerification;
 use App\Models\Pemohon;
+use App\Services\Otp\OtpService;
 use App\Support\NomorTeleponIndonesia;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +20,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use InvalidArgumentException;
@@ -31,14 +32,14 @@ class OtpController extends Controller
 
     private const COOLDOWN_KIRIM_ULANG_DETIK = 60;
 
-    public function __construct(private readonly PengirimOtp $pengirimOtp) {}
+    public function __construct(private readonly PengirimOtp $pengirimOtp, private readonly OtpService $otpService) {}
 
     /**
      * Generate kode OTP 6 digit acak.
      */
     protected function generateKode(): string
     {
-        return (string) random_int(100000, 999999);
+        return $this->otpService->generateKode();
     }
 
     public function showDaftar(Request $request)
@@ -82,12 +83,12 @@ class OtpController extends Controller
         }
 
         try {
-            $nomorHp = NomorTeleponIndonesia::keFormatWhatsApp($nomorHp);
+            $nomorHp = NomorTeleponIndonesia::kanonis($nomorHp);
         } catch (InvalidArgumentException) {
             $this->bersihkanAlurOtp($request);
 
             return redirect()->route('pemohon.masuk')
-                ->with('error', 'Sesi nomor WhatsApp tidak valid. Silakan mulai kembali.');
+                ->with('error', 'Sesi nomor HP tidak valid. Silakan mulai kembali.');
         }
 
         $otpAktif = OtpVerification::whereKey($otpId)
@@ -101,11 +102,10 @@ class OtpController extends Controller
         $durasiOtpDetik = $otpAktif
             ? max(0, (int) now()->diffInSeconds($otpAktif->expired_at, false))
             : 0;
-        $durasiKirimUlangDetik = $otpAktif
-            ? $this->sisaCooldownKirimUlang($otpAktif)
-            : 0;
+        $percobaanTerakhir = OtpVerification::where('no_hp', $nomorHp)->latest('id')->first();
+        $durasiKirimUlangDetik = $percobaanTerakhir ? $this->sisaCooldownKirimUlang($percobaanTerakhir) : 0;
         $nomorTersamar = NomorTeleponIndonesia::samarkan($nomorHp);
-        $kanalOtp = config('otp.driver') === 'whatsapp' ? 'WhatsApp' : 'log lokal';
+        $kanalOtp = $this->namaKanalOtp();
 
         return view('public.otp.form', [
             'nomorTersamar' => $nomorTersamar,
@@ -122,7 +122,7 @@ class OtpController extends Controller
     public function kirimOtp(DaftarPemohonRequest $request)
     {
         $dataPemohon = $request->validated();
-        $noHp = NomorTeleponIndonesia::keFormatWhatsApp($dataPemohon['no_hp']);
+        $noHp = NomorTeleponIndonesia::kanonis($dataPemohon['no_hp']);
 
         return $this->prosesKirimOtp(
             $request,
@@ -133,13 +133,13 @@ class OtpController extends Controller
     }
 
     /**
-     * Memulai login pemohon hanya dengan nomor WhatsApp.
+     * Memulai login pemohon hanya dengan nomor HP.
      * Keberadaan akun baru diperiksa setelah OTP berhasil diverifikasi agar
      * endpoint ini tidak dapat dipakai untuk enumerasi akun.
      */
     public function kirimOtpMasuk(MasukPemohonRequest $request)
     {
-        $noHp = NomorTeleponIndonesia::keFormatWhatsApp($request->validated('no_hp'));
+        $noHp = NomorTeleponIndonesia::kanonis($request->validated('no_hp'));
 
         return $this->prosesKirimOtp(
             $request,
@@ -168,11 +168,11 @@ class OtpController extends Controller
         }
 
         try {
-            $noHp = NomorTeleponIndonesia::keFormatWhatsApp($noHp);
+            $noHp = NomorTeleponIndonesia::kanonis($noHp);
         } catch (InvalidArgumentException) {
             $this->bersihkanAlurOtp($request);
 
-            return redirect()->route('pemohon.masuk')->with('error', 'Sesi nomor WhatsApp tidak valid. Silakan mulai kembali.');
+            return redirect()->route('pemohon.masuk')->with('error', 'Sesi nomor HP tidak valid. Silakan mulai kembali.');
         }
 
         return $this->prosesKirimOtp(
@@ -187,11 +187,8 @@ class OtpController extends Controller
     /**
      * Memverifikasi kode OTP dan mendaftarkan pemohon.
      */
-    public function verifikasiOtp(Request $request)
+    public function verifikasiOtp(VerifikasiOtpRequest $request)
     {
-        $request->validate([
-            'kode_otp' => ['required', 'digits:6'],
-        ]);
 
         $nomorSesi = $request->session()->get('otp_pemohon.no_hp');
         $modeOtp = $request->session()->get('otp_mode');
@@ -207,7 +204,7 @@ class OtpController extends Controller
 
         try {
             $noHp = is_string($nomorSesi)
-                ? NomorTeleponIndonesia::keFormatWhatsApp($nomorSesi)
+                ? NomorTeleponIndonesia::kanonis($nomorSesi)
                 : null;
         } catch (InvalidArgumentException) {
             $noHp = null;
@@ -249,7 +246,7 @@ class OtpController extends Controller
             ]);
 
             return redirect()->route('pemohon.daftar.lengkapi')
-                ->with('success', 'Nomor WhatsApp berhasil diverifikasi. Lengkapi profil untuk membuat akun.');
+                ->with('success', 'Nomor HP berhasil diverifikasi. Lengkapi profil untuk membuat akun.');
         }
 
         if ($hasil['status'] !== 'berhasil') {
@@ -268,7 +265,7 @@ class OtpController extends Controller
         $pesan = match (true) {
             $modeOtp === self::MODE_MASUK => 'Berhasil masuk sebagai pemohon.',
             $hasil['akun_baru'] ?? false => 'Pendaftaran berhasil. Anda sudah masuk sebagai pemohon.',
-            default => 'Nomor WhatsApp sudah terdaftar. Anda berhasil masuk dengan profil yang tersimpan.',
+            default => 'Nomor HP sudah terdaftar. Anda berhasil masuk dengan profil yang tersimpan.',
         };
 
         return $this->alihkanSetelahAutentikasi($request, $tujuanDefault)
@@ -287,7 +284,7 @@ class OtpController extends Controller
         bool $kirimUlang = false,
     ) {
         $kunciNomor = NomorTeleponIndonesia::kunciRateLimit($noHp);
-        $lockSeconds = min(30, max(1, (int) config('otp.whatsapp.timeout_seconds', 10))) + 5;
+        $lockSeconds = $this->timeoutProviderOtp() + 5;
         $lock = Cache::lock('otp-kirim-lock:'.$kunciNomor, $lockSeconds);
 
         if (! $lock->get()) {
@@ -298,23 +295,19 @@ class OtpController extends Controller
         }
 
         try {
-            if ($kirimUlang) {
-                $otpTerbaru = OtpVerification::where('no_hp', $noHp)
-                    ->whereNull('verified_at')
-                    ->where('expired_at', '>', now())
-                    ->latest('created_at')
-                    ->latest('id')
-                    ->first();
-                $sisaCooldown = $otpTerbaru
-                    ? $this->sisaCooldownKirimUlang($otpTerbaru)
-                    : 0;
+            $otpTerbaru = OtpVerification::where('no_hp', $noHp)
+                ->latest('created_at')
+                ->latest('id')
+                ->first();
+            $sisaCooldown = $otpTerbaru
+                ? $this->sisaCooldownKirimUlang($otpTerbaru)
+                : 0;
 
-                if ($sisaCooldown > 0) {
-                    return redirect()->back()->with(
-                        'error',
-                        "Tunggu {$sisaCooldown} detik sebelum mengirim ulang OTP.",
-                    );
-                }
+            if ($sisaCooldown > 0) {
+                return redirect()->back()->with(
+                    'error',
+                    "Tunggu {$sisaCooldown} detik sebelum mengirim ulang OTP.",
+                );
             }
 
             // Rate limit: maksimal 3x pengiriman per nomor HP per 10 menit.
@@ -326,17 +319,10 @@ class OtpController extends Controller
             }
 
             $kode = $this->generateKode();
-            $kedaluwarsaMenit = min(5, max(1, (int) config('otp.kedaluwarsa_menit', 5)));
-            $otpBaru = OtpVerification::create([
-                'no_hp' => $noHp,
-                'kode_otp' => Hash::make($kode),
-                'expired_at' => now()->addMinutes($kedaluwarsaMenit),
-                'attempt_count' => 0,
-                'created_at' => now(),
-            ]);
+            $otpBaru = $this->otpService->buat($noHp, $kode);
 
             // Tetap hit sebelum request eksternal agar kegagalan provider tidak
-            // dapat dipakai untuk membanjiri endpoint WhatsApp.
+            // dapat dipakai untuk membanjiri endpoint provider berbayar.
             RateLimiter::hit($key, 600);
 
             try {
@@ -350,7 +336,15 @@ class OtpController extends Controller
                     'alasan' => $exception->getMessage(),
                 ]);
 
-                return redirect()->back()
+                if (! $kirimUlang || ! $request->session()->has('otp_verification_id')) {
+                    $request->session()->put([
+                        'otp_pemohon' => array_merge($dataPemohon, ['no_hp' => $noHp]),
+                        'otp_mode' => $modeOtp,
+                        'otp_verification_id' => $otpBaru->id,
+                    ]);
+                }
+
+                return redirect()->route('otp.form')
                     ->withInput($request->except('kode_otp'))
                     ->with('error', 'Kode OTP belum dapat dikirim. Silakan coba lagi beberapa saat.');
             }
@@ -374,7 +368,7 @@ class OtpController extends Controller
                 'otp_verification_id' => $otpBaru->id,
             ]);
 
-            $kanal = config('otp.driver') === 'whatsapp' ? 'WhatsApp' : 'log lokal';
+            $kanal = $this->namaKanalOtp();
 
             return redirect()->route('otp.form')
                 ->with('otp_nomor', $noHp)
@@ -397,28 +391,7 @@ class OtpController extends Controller
         int $otpId,
     ): array {
         try {
-            return DB::transaction(function () use ($request, $noHp, $modeOtp, $otpId): array {
-                $otp = OtpVerification::whereKey($otpId)
-                    ->where('no_hp', $noHp)
-                    ->whereNull('verified_at')
-                    ->where('expired_at', '>', now())
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $otp) {
-                    return ['status' => 'tidak_valid'];
-                }
-
-                if ($otp->attempt_count >= 5) {
-                    return ['status' => 'terkunci'];
-                }
-
-                if (! Hash::check($request->kode_otp, $otp->kode_otp)) {
-                    $otp->increment('attempt_count');
-
-                    return ['status' => 'tidak_valid'];
-                }
-
+            return $this->otpService->konsumsi($otpId, $noHp, $request->kode_otp, function () use ($request, $noHp, $modeOtp): array {
                 $pemohonCocok = Pemohon::whereIn(
                     'no_hp',
                     NomorTeleponIndonesia::varianPenyimpanan($noHp),
@@ -426,15 +399,6 @@ class OtpController extends Controller
 
                 if ($pemohonCocok->count() > 1) {
                     throw new KonflikIdentitasPemohonException('Ditemukan duplikasi identitas pemohon.');
-                }
-
-                $dikonsumsi = OtpVerification::whereKey($otp->id)
-                    ->whereNull('verified_at')
-                    ->where('expired_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                if ($dikonsumsi !== 1) {
-                    return ['status' => 'tidak_valid'];
                 }
 
                 if ($modeOtp === self::MODE_MASUK && $pemohonCocok->isEmpty()) {
@@ -465,7 +429,7 @@ class OtpController extends Controller
                     'pemohon' => $pemohon,
                     'akun_baru' => $akunBaru,
                 ];
-            }, 3);
+            });
         } catch (UniqueConstraintViolationException $exception) {
             throw new KonflikIdentitasPemohonException(
                 'Terjadi konflik nomor HP saat menyimpan pemohon.',
@@ -674,6 +638,30 @@ class OtpController extends Controller
         ));
     }
 
+    private function namaKanalOtp(): string
+    {
+        return match (config('otp.driver')) {
+            'sms' => 'SMS',
+            'whatsapp' => 'WhatsApp',
+            'fonnte' => 'WhatsApp (demo)',
+            'log' => 'log lokal',
+            default => 'provider OTP',
+        };
+    }
+
+    private function timeoutProviderOtp(): int
+    {
+        $driver = config('otp.driver');
+        $timeout = match ($driver) {
+            'sms' => config('otp.sms.timeout_seconds', 10),
+            'whatsapp' => config('otp.whatsapp.timeout_seconds', 10),
+            'fonnte' => config('otp.fonnte.timeout_seconds', 10),
+            default => 10,
+        };
+
+        return min(30, max(1, (int) $timeout));
+    }
+
     /**
      * @return array{no_hp: string, berlaku_sampai: int}|null
      */
@@ -690,7 +678,7 @@ class OtpController extends Controller
         }
 
         try {
-            $bukti['no_hp'] = NomorTeleponIndonesia::keFormatWhatsApp($bukti['no_hp']);
+            $bukti['no_hp'] = NomorTeleponIndonesia::kanonis($bukti['no_hp']);
         } catch (InvalidArgumentException) {
             $request->session()->forget('pendaftaran_terverifikasi');
 

@@ -36,7 +36,7 @@
                         <span class="font-medium text-gray-800 ml-1">{{ $pemohon->nama }}</span>
                     </div>
                     <div>
-                        <span class="text-gray-500">Nomor WhatsApp:</span>
+                        <span class="text-gray-500">Nomor HP:</span>
                         <span class="font-medium text-gray-800 ml-1">{{ $pemohon->no_hp }}</span>
                     </div>
                 </div>

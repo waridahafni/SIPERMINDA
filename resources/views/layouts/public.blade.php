@@ -16,8 +16,10 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        primary: { 50: '#e6eef7', 100: '#b3cceb', 200: '#80aadf', 300: '#4d88d3', 400: '#1a66c7', 500: '#003D7A', 600: '#003162', 700: '#00254a', 800: '#001832', 900: '#000c1a' },
-                        secondary: { 50: '#eef2fb', 100: '#cad6f1', 200: '#a6bae7', 300: '#829edd', 400: '#5e82d3', 500: '#1E40AF', 600: '#1a3591', 700: '#152a73', 800: '#101f55', 900: '#0b1437' }
+                        primary: { 50: '#e6f4fb', 100: '#c2e5f6', 200: '#8ccfec', 300: '#4fb5df', 400: '#159bd1', 500: '#057fbd', 600: '#05669a', 700: '#064b76', 800: '#063d61', 900: '#042d48' },
+                        secondary: { 50: '#edf4fb', 100: '#d7e7f6', 200: '#b4d0eb', 300: '#83b0dd', 400: '#4b89c9', 500: '#0b5fa5', 600: '#084e89', 700: '#073e6d', 800: '#063255', 900: '#05243e' },
+                        bpsGreen: { 50: '#f1f9e9', 100: '#dff0cc', 500: '#6dbd2b', 600: '#579b20', 700: '#437b19' },
+                        bpsOrange: { 50: '#fff5e8', 100: '#ffe4c1', 500: '#f58220', 600: '#d9680b', 700: '#b9530a' }
                     }
                 }
             }
@@ -29,12 +31,15 @@
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-800" x-data="{ mobileMenu: false, loginMenu: false }">
     <a href="#konten-utama" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:text-primary-700 focus:px-4 focus:py-2 focus:rounded focus:shadow-lg">Lewati ke konten utama</a>
-    <nav class="bg-primary-500 text-white shadow-lg sticky top-0 z-50">
+    <nav class="bg-secondary-800 text-white shadow-lg sticky top-0 z-50 border-t-4 border-primary-400">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <a href="{{ route('beranda') }}" class="flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-white rounded" aria-label="Beranda BPS Kabupaten Padang Lawas">
-                    <img src="{{ asset('logo-bps.png') }}" alt="BPS" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
-                    <span class="font-bold text-lg hidden sm:block">BPS Kab. Padang Lawas</span>
+                    <img src="{{ asset('images/logo-bps-padanglawas.svg') }}" alt="Logo Badan Pusat Statistik" class="h-11 w-auto shrink-0">
+                    <span class="hidden sm:block leading-tight">
+                        <span class="block text-[10px] font-semibold tracking-[0.18em] text-primary-200">SIPERMINDA</span>
+                        <span class="block text-base font-extrabold">BPS Kab. Padang Lawas</span>
+                    </span>
                 </a>
                 <div class="hidden xl:flex items-center gap-4 text-sm font-medium">
                     <a href="{{ route('beranda') }}" class="hover:text-primary-200 transition">Beranda</a>
@@ -72,7 +77,7 @@
                                 <a x-ref="loginPemohon" href="{{ route('pemohon.masuk') }}"
                                     class="block px-4 py-3 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500">
                                     <span class="block font-semibold text-primary-700">Masuk sebagai Pemohon</span>
-                                    <span class="block mt-0.5 text-xs font-normal text-gray-600">Untuk masyarakat atau instansi, menggunakan OTP WhatsApp.</span>
+                                    <span class="block mt-0.5 text-xs font-normal text-gray-600">Untuk masyarakat atau instansi, menggunakan kode OTP.</span>
                                 </a>
                                 <a href="{{ route('internal.login') }}"
                                     class="block border-t border-gray-100 px-4 py-3 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500">
@@ -81,7 +86,6 @@
                                 </a>
                             </div>
                         </details>
-                        <a href="{{ route('pemohon.daftar') }}" class="bg-white text-primary-600 font-semibold px-3 py-1.5 rounded hover:bg-primary-100 transition">Daftar Pemohon</a>
                     @endif
                 </div>
                 <button type="button" x-ref="menuButton" @click="if ($refs.loginDetails) { $refs.loginDetails.open = false }; loginMenu = false; mobileMenu = !mobileMenu"
@@ -115,14 +119,13 @@
                     <div class="grid sm:grid-cols-2 gap-2 mt-2">
                         <a href="{{ route('pemohon.masuk') }}" class="block rounded-lg border border-white/50 px-3 py-2.5 hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                             <span class="block font-semibold">Sebagai Pemohon</span>
-                            <span class="block mt-0.5 text-xs font-normal text-primary-100">Masyarakat/instansi via OTP WhatsApp</span>
+                            <span class="block mt-0.5 text-xs font-normal text-primary-100">Masyarakat/instansi via kode OTP</span>
                         </a>
                         <a href="{{ route('internal.login') }}" class="block rounded-lg border border-white/50 px-3 py-2.5 hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                             <span class="block font-semibold">Sebagai Petugas</span>
                             <span class="block mt-0.5 text-xs font-normal text-primary-100">Khusus pegawai BPS</span>
                         </a>
                     </div>
-                    <a href="{{ route('pemohon.daftar') }}" class="block mt-3 text-center bg-white text-primary-600 px-3 py-3 rounded font-semibold hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600">Daftar Pemohon</a>
                 </div>
             @endif
         </div>
@@ -148,10 +151,15 @@
         @yield('content')
     </main>
 
-    <footer class="bg-primary-500 text-white mt-12">
+    <footer class="bg-secondary-800 text-white mt-12 border-t-4 border-bpsOrange-500">
         <div class="max-w-7xl mx-auto px-4 py-8 text-center text-sm">
+            <img src="{{ asset('images/logo-bps-padanglawas.svg') }}" alt="Logo Badan Pusat Statistik" class="h-12 w-auto mx-auto mb-3">
             <p class="font-semibold">BPS Kabupaten Padang Lawas</p>
             <p class="text-primary-200 mt-1">Jl. Padang Lawas No. 1, Sibuhuan, Kec. Barumun, Kab. Padang Lawas, Sumatera Utara</p>
+            <div class="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-primary-100">
+                <a href="{{ route('privasi') }}" class="hover:text-white hover:underline">Kebijakan Privasi</a>
+                <a href="{{ route('ketentuan') }}" class="hover:text-white hover:underline">Ketentuan Layanan</a>
+            </div>
             <p class="text-primary-200 mt-1">&copy; {{ date('Y') }} Badan Pusat Statistik. All rights reserved.</p>
         </div>
     </footer>

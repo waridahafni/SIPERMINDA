@@ -8,14 +8,16 @@ use App\Models\NomorTiketCounter;
 use App\Models\NotifikasiLog;
 use App\Models\Pemohon;
 use App\Models\PermintaanData;
+use App\Models\PermintaanKlarifikasi;
 use App\Models\UnduhanLog;
+use App\Support\DokumenStorage;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PermintaanController extends Controller
 {
@@ -42,7 +44,7 @@ class PermintaanController extends Controller
             abort(404);
         }
 
-        $permintaan->load(['pemohon', 'approvalLog.approver', 'kategori']);
+        $permintaan->load(['pemohon', 'approvalLog.approver', 'klarifikasi', 'kategori']);
 
         return view('public.status.detail', compact('permintaan'));
     }
@@ -136,7 +138,10 @@ class PermintaanController extends Controller
                     'sent_at' => now(),
                 ]);
             } catch (\Exception $e) {
-                Log::warning('Gagal kirim email: '.$e->getMessage());
+                Log::warning('Gagal kirim email.', [
+                    'permintaan_id' => $permintaan->id,
+                    'jenis_error' => $e::class,
+                ]);
 
                 NotifikasiLog::create([
                     'permintaan_data_id' => $permintaan->id,
@@ -177,7 +182,7 @@ class PermintaanController extends Controller
             return redirect()->back()->with('error', 'File hasil belum dapat diunduh.');
         }
 
-        if (! Storage::disk('local')->exists($permintaan->file_hasil_path)) {
+        if (! DokumenStorage::disk()->exists($permintaan->file_hasil_path)) {
             return redirect()->back()->with('error', 'File hasil tidak ditemukan di penyimpanan.');
         }
 
@@ -191,7 +196,106 @@ class PermintaanController extends Controller
         $ekstensi = pathinfo($permintaan->file_hasil_path, PATHINFO_EXTENSION);
         $namaUnduhan = 'hasil-'.Str::slug($permintaan->nomor_tiket).'.'.$ekstensi;
 
-        return response()->download(Storage::disk('local')->path($permintaan->file_hasil_path), $namaUnduhan);
+        return DokumenStorage::unduh($permintaan->file_hasil_path, $namaUnduhan);
+    }
+
+    public function jawabInfoTambahan(PermintaanData $permintaan, Request $request)
+    {
+        $pemohon = $this->pemohonAktif($request);
+
+        if ((int) $permintaan->pemohon_id !== (int) $pemohon->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'jawaban' => 'required|string|max:5000',
+        ]);
+
+        $klarifikasi = DB::transaction(function () use ($permintaan, $pemohon, $data): PermintaanKlarifikasi {
+            $permintaanTerkunci = PermintaanData::whereKey($permintaan->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $permintaanTerkunci->pemohon_id !== (int) $pemohon->id) {
+                abort(404);
+            }
+
+            if ($permintaanTerkunci->status !== 'menunggu_info_pemohon') {
+                throw ValidationException::withMessages([
+                    'jawaban' => 'Permintaan ini tidak lagi menunggu informasi tambahan.',
+                ]);
+            }
+
+            $klarifikasi = $permintaanTerkunci->klarifikasi()
+                ->belumDijawab()
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $klarifikasi) {
+                throw ValidationException::withMessages([
+                    'jawaban' => 'Pertanyaan petugas tidak ditemukan atau sudah dijawab.',
+                ]);
+            }
+
+            $klarifikasi->update([
+                'jawaban' => $data['jawaban'],
+                'dijawab_at' => now(),
+            ]);
+
+            $permintaanTerkunci->update([
+                'status' => $klarifikasi->statusSetelahDijawab(),
+            ]);
+
+            return $klarifikasi;
+        });
+
+        $this->kirimNotifikasiJawabanInfo($permintaan, $klarifikasi);
+
+        return redirect()
+            ->route('pemohon.permintaan.show', $permintaan)
+            ->with('success', 'Informasi tambahan berhasil dikirim. Permintaan Anda kembali diproses.');
+    }
+
+    private function kirimNotifikasiJawabanInfo(
+        PermintaanData $permintaan,
+        PermintaanKlarifikasi $klarifikasi
+    ): void {
+        $emailPetugas = $klarifikasi->peminta()->value('email');
+
+        if (! is_string($emailPetugas) || $emailPetugas === '') {
+            return;
+        }
+
+        try {
+            Mail::raw(
+                "Pemohon telah menjawab permintaan informasi tambahan untuk tiket {$permintaan->nomor_tiket}. Silakan buka SIPERMINDA untuk meninjau jawaban dan melanjutkan proses.",
+                function ($message) use ($emailPetugas) {
+                    $message->to($emailPetugas)
+                        ->subject('Informasi Tambahan Telah Dijawab - BPS Padang Lawas');
+                }
+            );
+
+            NotifikasiLog::create([
+                'permintaan_data_id' => $permintaan->id,
+                'tujuan_email' => $emailPetugas,
+                'jenis_notifikasi' => 'info_tambahan_dijawab',
+                'status_kirim' => 'berhasil',
+                'sent_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Gagal mengirim notifikasi jawaban informasi tambahan.', [
+                'permintaan_id' => $permintaan->id,
+                'exception' => $e::class,
+            ]);
+
+            NotifikasiLog::create([
+                'permintaan_data_id' => $permintaan->id,
+                'tujuan_email' => $emailPetugas,
+                'jenis_notifikasi' => 'info_tambahan_dijawab',
+                'status_kirim' => 'gagal',
+            ]);
+        }
     }
 
     private function pemohonAktif(Request $request): Pemohon

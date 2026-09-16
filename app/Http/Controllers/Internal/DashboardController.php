@@ -10,6 +10,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $slaHariKerja = config('layanan.sla_hari_kerja', 2);
+        $batasSla = now()->subWeekdays($slaHariKerja);
+        $statusAktif = ['diajukan', 'disetujui_petugas', 'menunggu_info_pemohon'];
         $totalPermintaan = PermintaanData::count();
 
         $perStatus = PermintaanData::select('status', DB::raw('count(*) as total'))
@@ -26,11 +29,20 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
+        $permintaanMelewatiSla = PermintaanData::with('pemohon')
+            ->whereIn('status', $statusAktif)
+            ->where('created_at', '<=', $batasSla)
+            ->oldest('created_at')
+            ->take(5)
+            ->get();
+
         return view('internal.dashboard.index', compact(
             'totalPermintaan',
             'perStatus',
             'perBulan',
-            'permintaanTerbaru'
+            'permintaanTerbaru',
+            'slaHariKerja',
+            'permintaanMelewatiSla'
         ));
     }
 }

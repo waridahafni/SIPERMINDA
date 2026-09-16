@@ -18,7 +18,7 @@ final class NomorHpIndonesia implements ValidationRule
         }
 
         try {
-            NomorTeleponIndonesia::keFormatWhatsApp($value);
+            NomorTeleponIndonesia::kanonis($value);
         } catch (InvalidArgumentException) {
             $fail('Nomor HP Indonesia tidak valid. Gunakan format 08..., 628..., atau +628....');
         }

@@ -7,6 +7,8 @@ use App\Models\KategoriData;
 use App\Models\NotifikasiLog;
 use App\Models\PermintaanApprovalLog;
 use App\Models\PermintaanData;
+use App\Models\PermintaanKlarifikasi;
+use App\Services\WhatsApp\NotifikasiStatusPermintaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +20,8 @@ use Illuminate\Validation\ValidationException;
 
 class PermintaanController extends Controller
 {
+    public function __construct(private readonly NotifikasiStatusPermintaan $notifikasiWhatsApp) {}
+
     public function index(Request $request)
     {
         $query = PermintaanData::with('pemohon', 'kategori');
@@ -42,7 +46,7 @@ class PermintaanController extends Controller
             });
         }
 
-        $permintaan = $query->latest()->paginate(15);
+        $permintaan = $query->latest('updated_at')->paginate(15);
         $kategori = KategoriData::all();
 
         return view('internal.permintaan.index', compact('permintaan', 'kategori'));
@@ -50,7 +54,13 @@ class PermintaanController extends Controller
 
     public function show(PermintaanData $permintaan)
     {
-        $permintaan->load(['pemohon', 'kategori', 'approvalLog.approver', 'uploader']);
+        $permintaan->load([
+            'pemohon',
+            'kategori',
+            'approvalLog.approver',
+            'klarifikasi.peminta',
+            'uploader',
+        ]);
 
         return view('internal.permintaan.show', compact('permintaan'));
     }
@@ -62,9 +72,7 @@ class PermintaanController extends Controller
     {
         return match ($permintaan->status) {
             'diajukan' => 'staf',
-            'diverifikasi_staf' => 'kasi',
-            'disetujui_kasi' => 'kabid',
-            'disetujui_kabid' => 'upload',
+            'disetujui_petugas' => 'upload',
             default => null,
         };
     }
@@ -76,24 +84,23 @@ class PermintaanController extends Controller
     {
         return match ($tahap) {
             'staf' => Auth::user()->can('verifikasi-permintaan'),
-            'kasi' => Auth::user()->can('approve-level-1'),
-            'kabid' => Auth::user()->can('approve-level-2'),
             'upload' => Auth::user()->can('upload-hasil'),
             default => false,
         };
     }
 
     /**
-     * Mengambil keputusan (setujui/tolak) pada tahap yang relevan berdasarkan status.
+     * Mengambil keputusan pada tahap yang relevan berdasarkan status.
      */
     public function keputusan(PermintaanData $permintaan, Request $request)
     {
-        $request->validate([
-            'keputusan' => 'required|in:setuju,tolak',
-            'catatan' => 'required_if:keputusan,tolak|nullable|string|max:2000',
+        $data = $request->validate([
+            'keputusan' => 'required|in:setuju,tolak,minta_info',
+            'catatan' => 'required_if:keputusan,tolak,minta_info|nullable|string|max:2000',
+            'catatan_internal' => 'exclude_unless:keputusan,minta_info|nullable|string|max:2000',
         ]);
 
-        [$permintaan, $tahap] = DB::transaction(function () use ($permintaan, $request) {
+        [$permintaan, $tahap] = DB::transaction(function () use ($permintaan, $data) {
             $permintaan = PermintaanData::whereKey($permintaan->id)->lockForUpdate()->firstOrFail();
             $tahap = $this->tahapSaatIni($permintaan);
 
@@ -107,41 +114,74 @@ class PermintaanController extends Controller
                 abort(403, 'Anda tidak berwenang melakukan aksi ini.');
             }
 
-            $statusBaru = match ([$tahap, $request->keputusan]) {
-                ['staf', 'setuju'] => 'diverifikasi_staf',
+            if ($data['keputusan'] === 'minta_info') {
+                $sudahMenungguJawaban = PermintaanKlarifikasi::query()
+                    ->where('permintaan_data_id', $permintaan->id)
+                    ->belumDijawab()
+                    ->exists();
+
+                if ($sudahMenungguJawaban) {
+                    throw ValidationException::withMessages([
+                        'keputusan' => 'Permintaan ini masih menunggu jawaban pemohon.',
+                    ]);
+                }
+
+                PermintaanKlarifikasi::create([
+                    'permintaan_data_id' => $permintaan->id,
+                    'tahap' => $tahap,
+                    'diminta_oleh' => Auth::id(),
+                    'pertanyaan' => $data['catatan'],
+                    'catatan_internal' => $data['catatan_internal'] ?? null,
+                ]);
+
+                $permintaan->update([
+                    'status' => 'menunggu_info_pemohon',
+                    'catatan_penolakan' => null,
+                ]);
+
+                return [$permintaan, $tahap];
+            }
+
+            $statusBaru = match ([$tahap, $data['keputusan']]) {
+                ['staf', 'setuju'] => 'disetujui_petugas',
                 ['staf', 'tolak'] => 'ditolak',
-                ['kasi', 'setuju'] => 'disetujui_kasi',
-                ['kasi', 'tolak'] => 'ditolak',
-                ['kabid', 'setuju'] => 'disetujui_kabid',
-                ['kabid', 'tolak'] => 'ditolak',
             };
 
             $permintaan->update([
                 'status' => $statusBaru,
-                'catatan_penolakan' => $request->keputusan === 'tolak' ? $request->catatan : null,
+                'catatan_penolakan' => $data['keputusan'] === 'tolak' ? $data['catatan'] : null,
             ]);
 
             PermintaanApprovalLog::create([
                 'permintaan_data_id' => $permintaan->id,
                 'tahap' => $tahap,
                 'approver_id' => Auth::id(),
-                'keputusan' => $request->keputusan,
-                'catatan' => $request->catatan,
+                'keputusan' => $data['keputusan'],
+                'catatan' => $data['catatan'] ?? null,
                 'created_at' => now(),
             ]);
 
             return [$permintaan, $tahap];
         });
 
-        $this->kirimNotifikasi($permintaan, $request->keputusan === 'setuju' ? 'disetujui' : 'ditolak', $request->catatan);
+        $jenisNotifikasi = match ($data['keputusan']) {
+            'setuju' => 'disetujui',
+            'tolak' => 'ditolak',
+            'minta_info' => 'info_tambahan_diminta',
+        };
+        $this->kirimNotifikasi($permintaan, $jenisNotifikasi, $data['catatan'] ?? null);
 
-        $pesan = $request->keputusan === 'setuju' ? "Persetujuan $tahap berhasil." : 'Permintaan ditolak.';
+        $pesan = match ($data['keputusan']) {
+            'setuju' => "Persetujuan $tahap berhasil.",
+            'tolak' => 'Permintaan ditolak.',
+            'minta_info' => 'Permintaan informasi tambahan berhasil dikirim kepada pemohon.',
+        };
 
         return redirect()->route('internal.permintaan.index')->with('success', $pesan);
     }
 
     /**
-     * Upload file hasil untuk permintaan yang sudah disetujui final (kabid).
+     * Upload file hasil untuk permintaan yang sudah disetujui petugas.
      */
     public function storeUploadHasil(Request $request, PermintaanData $permintaan)
     {
@@ -153,8 +193,8 @@ class PermintaanController extends Controller
             abort(403, 'Anda tidak berhak mengupload file hasil.');
         }
 
-        if ($permintaan->status !== 'disetujui_kabid') {
-            return redirect()->back()->with('error', 'Permintaan belum disetujui final oleh kabid.');
+        if ($permintaan->status !== 'disetujui_petugas') {
+            return redirect()->back()->with('error', 'Permintaan belum disetujui oleh petugas.');
         }
 
         $file = $request->file('file_hasil');
@@ -165,7 +205,7 @@ class PermintaanController extends Controller
             $permintaan = DB::transaction(function () use ($permintaan, $path) {
                 $permintaan = PermintaanData::whereKey($permintaan->id)->lockForUpdate()->firstOrFail();
 
-                if ($permintaan->status !== 'disetujui_kabid') {
+                if ($permintaan->status !== 'disetujui_petugas') {
                     throw ValidationException::withMessages([
                         'file_hasil' => 'Status permintaan sudah berubah dan file tidak dapat diupload.',
                     ]);
@@ -175,6 +215,14 @@ class PermintaanController extends Controller
                     'file_hasil_path' => $path,
                     'uploaded_by' => Auth::id(),
                     'status' => 'data_siap',
+                ]);
+
+                PermintaanApprovalLog::create([
+                    'permintaan_data_id' => $permintaan->id,
+                    'tahap' => 'upload',
+                    'approver_id' => Auth::id(),
+                    'keputusan' => 'data_siap',
+                    'created_at' => now(),
                 ]);
 
                 return $permintaan;
@@ -203,7 +251,26 @@ class PermintaanController extends Controller
             return redirect()->back()->with('error', 'Permintaan belum dalam kondisi data siap.');
         }
 
-        $permintaan->update(['status' => 'selesai']);
+        $permintaan = DB::transaction(function () use ($permintaan) {
+            $permintaan = PermintaanData::whereKey($permintaan->id)->lockForUpdate()->firstOrFail();
+
+            if ($permintaan->status === 'selesai') {
+                return $permintaan;
+            }
+
+            $permintaan->update(['status' => 'selesai']);
+            PermintaanApprovalLog::create([
+                'permintaan_data_id' => $permintaan->id,
+                'tahap' => 'upload',
+                'approver_id' => Auth::id(),
+                'keputusan' => 'selesai',
+                'created_at' => now(),
+            ]);
+
+            return $permintaan;
+        });
+
+        $this->kirimNotifikasi($permintaan, 'selesai');
 
         return redirect()->route('internal.permintaan.index')->with('success', 'Permintaan ditandai selesai.');
     }
@@ -236,10 +303,6 @@ class PermintaanController extends Controller
      */
     protected function kirimNotifikasi(PermintaanData $permintaan, string $jenis, ?string $catatan = null): void
     {
-        if (! $permintaan->pemohon->email) {
-            return;
-        }
-
         $template = [
             'disetujui' => [
                 'subject' => 'Permintaan Data Disetujui - BPS Padang Lawas',
@@ -253,6 +316,14 @@ class PermintaanController extends Controller
                 'subject' => 'Data Siap Diunduh - BPS Padang Lawas',
                 'pesan' => "Data hasil permintaan Anda dengan nomor tiket {$permintaan->nomor_tiket} sudah siap dan dapat diunduh melalui portal.",
             ],
+            'info_tambahan_diminta' => [
+                'subject' => 'Informasi Tambahan Diperlukan - BPS Padang Lawas',
+                'pesan' => "Petugas memerlukan informasi tambahan untuk permintaan data dengan nomor tiket {$permintaan->nomor_tiket}. Silakan masuk ke portal SIPERMINDA untuk menjawabnya.",
+            ],
+            'selesai' => [
+                'subject' => 'Permintaan Data Selesai - BPS Padang Lawas',
+                'pesan' => "Permintaan data Anda dengan nomor tiket {$permintaan->nomor_tiket} telah selesai diproses.",
+            ],
         ];
 
         $konfig = $template[$jenis] ?? null;
@@ -262,31 +333,36 @@ class PermintaanController extends Controller
 
         $pesan = $konfig['pesan'];
         if ($catatan) {
-            $pesan .= "\nCatatan: {$catatan}";
+            $labelCatatan = $jenis === 'info_tambahan_diminta' ? 'Pertanyaan' : 'Catatan';
+            $pesan .= "\n{$labelCatatan}: {$catatan}";
         }
 
-        try {
-            Mail::raw($pesan, function ($message) use ($permintaan, $konfig) {
-                $message->to($permintaan->pemohon->email)
-                    ->subject($konfig['subject']);
-            });
+        if ($permintaan->pemohon->email) {
+            try {
+                Mail::raw($pesan, function ($message) use ($permintaan, $konfig) {
+                    $message->to($permintaan->pemohon->email)
+                        ->subject($konfig['subject']);
+                });
 
-            NotifikasiLog::create([
-                'permintaan_data_id' => $permintaan->id,
-                'tujuan_email' => $permintaan->pemohon->email,
-                'jenis_notifikasi' => $jenis,
-                'status_kirim' => 'berhasil',
-                'sent_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            Log::warning('Gagal kirim email notifikasi: '.$e->getMessage());
+                NotifikasiLog::create([
+                    'permintaan_data_id' => $permintaan->id,
+                    'tujuan_email' => $permintaan->pemohon->email,
+                    'jenis_notifikasi' => $jenis,
+                    'status_kirim' => 'berhasil',
+                    'sent_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Gagal kirim email notifikasi: '.$e->getMessage());
 
-            NotifikasiLog::create([
-                'permintaan_data_id' => $permintaan->id,
-                'tujuan_email' => $permintaan->pemohon->email,
-                'jenis_notifikasi' => $jenis,
-                'status_kirim' => 'gagal',
-            ]);
+                NotifikasiLog::create([
+                    'permintaan_data_id' => $permintaan->id,
+                    'tujuan_email' => $permintaan->pemohon->email,
+                    'jenis_notifikasi' => $jenis,
+                    'status_kirim' => 'gagal',
+                ]);
+            }
         }
+
+        $this->notifikasiWhatsApp->kirim($permintaan->loadMissing('pemohon'), $jenis);
     }
 }

@@ -67,7 +67,7 @@ Dokumen ini merangkum aturan bisnis (business rules) yang berlaku dalam sistem, 
 | Kabid | Approval final, dapat menolak/meminta info tambahan |
 | Admin | Kelola user & role, akses penuh ke seluruh data & laporan |
 
-## 10. Aturan Akun Pemohon Publik (Tambahan 19 Agustus 2026)
+## 10. Aturan Akun Pemohon Publik (Keputusan Awal 19 Agustus 2026)
 
 - Pemohon mendaftar dan masuk tanpa password dengan OTP yang dikirim ke nomor WhatsApp.
 - Profil pemohon baru hanya dibuat setelah nomor WhatsApp berhasil diverifikasi.
@@ -76,3 +76,30 @@ Dokumen ini merangkum aturan bisnis (business rules) yang berlaku dalam sistem, 
 - Pemohon yang sudah masuk hanya boleh melihat halaman selesai, riwayat, dan file hasil milik `pemohon_id` pada sesinya.
 - Cek status menggunakan nomor tiket dan nomor WhatsApp tetap tersedia tanpa login, tetapi unduhan hasil khusus tetap mewajibkan akun pemilik.
 - Keluar wajib menggunakan request `POST` dengan CSRF dan membersihkan seluruh state autentikasi serta challenge OTP pemohon.
+
+## 11. Perubahan Kanal Verifikasi Pemohon (Tambahan 24 Agustus 2026)
+
+- Aturan kanal WhatsApp pada bagian 10 digantikan secara operasional oleh OTP melalui SMS; identitas akun tetap nomor HP yang sama.
+- Kode OTP SMS berlaku maksimal 5 menit, maksimal 5 percobaan, dan tidak boleh disimpan atau dicatat dalam bentuk teks biasa di database/log production.
+- Production wajib gagal tertutup apabila provider SMS belum dikonfigurasi atau menolak pengiriman; tidak boleh beralih otomatis ke log atau WhatsApp.
+- Satu nomor HP kanonis tetap hanya boleh terhubung ke satu identitas pemohon dan seluruh aturan anti-enumerasi, kepemilikan, serta logout pada bagian 10 tetap berlaku.
+- Keberhasilan autentikasi ditentukan oleh verifikasi hash OTP di aplikasi. Status transaksi pada dashboard provider bukan sumber kebenaran login pemohon.
+
+## 12. Aturan Informasi Tambahan (Tambahan 25 Agustus 2026)
+
+- Minta info hanya dapat dilakukan oleh approver yang berwenang pada tahap aktif dan pertanyaan kepada pemohon wajib diisi.
+- Selama status `menunggu_info_pemohon`, keputusan approval, upload hasil, dan penutupan permintaan tidak dapat dilakukan.
+- Tahap asal ditentukan dan disimpan oleh server, bukan berasal dari input browser.
+- Hanya akun pemohon pemilik tiket yang dapat menjawab. Akun lain harus menerima respons tidak ditemukan agar keberadaan tiket tidak bocor.
+- Setelah jawaban diterima, permintaan kembali ke status tahap yang meminta dan dapat dinilai ulang oleh approver pada tahap tersebut.
+- Satu permintaan hanya boleh memiliki satu pertanyaan terbuka. Jawaban yang sudah dikirim tidak dapat ditimpa; putaran baru dibuat sebagai riwayat baru.
+- Pertanyaan dan jawaban terlihat oleh pemohon, sedangkan catatan internal hanya terlihat oleh petugas.
+- Jawaban versi awal berbentuk teks. Dukungan lampiran ditunda sampai aturan keamanan dan retensinya disepakati.
+
+## 13. Aturan Fonnte untuk Demo (Tambahan 25 Agustus 2026)
+
+- Fonnte hanya boleh dipakai ketika `APP_ENV=local` atau `testing` untuk demo. Environment lainnya, khususnya production BPS, dilarang menggunakan `OTP_DRIVER=fonnte` dan wajib gagal tertutup jika driver tersebut dipilih.
+- Fonnte tidak boleh menjadi fallback otomatis ketika Verihubs SMS atau Meta WhatsApp gagal, dan kegagalan Fonnte juga tidak boleh dialihkan otomatis ke provider lain.
+- Nomor pengirim harus merupakan nomor khusus demo yang penggunaannya telah diizinkan, bukan nomor pribadi petugas. Perangkat harus diputuskan ketika demo berakhir jika tidak lagi diperlukan.
+- Token Fonnte wajib disimpan sebagai rahasia environment, tidak boleh masuk Git, chat, screenshot, atau log, dan harus dirotasi jika terpapar.
+- Masa berlaku, hash, batas percobaan, rate limit, lock pengiriman, serta konsumsi atomik OTP tetap mengikuti aturan autentikasi aplikasi. Respons sukses provider tidak membuktikan pesan telah diterima perangkat.

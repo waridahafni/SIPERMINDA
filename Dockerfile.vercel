@@ -1,0 +1,34 @@
+FROM node:22-bookworm-slim AS assets
+WORKDIR /app
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --ignore-scripts
+COPY resources ./resources
+COPY vite.config.js ./
+RUN npm run build
+
+FROM dunglas/frankenphp:1-php8.4-bookworm AS base
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && install-php-extensions intl zip bcmath mbstring pdo_pgsql pdo_mysql \
+    && printf 'upload_max_filesize=50M\npost_max_size=55M\nexpose_php=Off\n' > "$PHP_INI_DIR/conf.d/siperminda.ini"
+WORKDIR /app
+
+FROM base AS dependencies
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --no-scripts --prefer-dist
+COPY . .
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && composer dump-autoload --no-dev --classmap-authoritative \
+    && php artisan view:cache
+
+FROM base AS runtime
+COPY --from=dependencies --chown=www-data:www-data /app /app
+COPY --from=assets --chown=www-data:www-data /app/public/build /app/public/build
+COPY Caddyfile /etc/frankenphp/Caddyfile
+RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp \
+    && chown -R www-data:www-data /config/caddy /data/caddy
+ENV PORT=80 APP_ENV=production APP_DEBUG=false LOG_CHANNEL=stderr \
+    SESSION_DRIVER=database CACHE_STORE=database QUEUE_CONNECTION=sync \
+    FILESYSTEM_DISK=s3 DOCUMENTS_DISK=s3 OTP_DRIVER=whatsapp SESSION_SECURE_COOKIE=true TRUSTED_PROXIES=*
+USER www-data
+CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
