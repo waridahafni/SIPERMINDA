@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'BPS Kabupaten Padang Lawas')</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo-siperinda.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -35,16 +36,17 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <a href="{{ route('beranda') }}" class="flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-white rounded" aria-label="Beranda BPS Kabupaten Padang Lawas">
-                    <img src="{{ asset('images/logo-bps-padanglawas.svg') }}" alt="Logo Badan Pusat Statistik" class="h-11 w-auto shrink-0">
+                    <div class="h-11 w-11 rounded-xl bg-gradient-to-br from-primary-300 via-primary-500 to-secondary-600 shadow-[0_6px_18px_rgba(5,102,154,0.42)] ring-2 ring-white/15 flex items-center justify-center shrink-0">
+                        <img src="{{ asset('images/logo-siperinda.svg') }}" alt="Logo SIPERMINDA" class="h-7 w-7 object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)]">
+                    </div>
                     <span class="hidden sm:block leading-tight">
                         <span class="block text-[10px] font-semibold tracking-[0.18em] text-primary-200">SIPERMINDA</span>
-                        <span class="block text-base font-extrabold">BPS Kab. Padang Lawas</span>
+                        <span class="block text-base font-extrabold text-white">BPS Kab. Padang Lawas</span>
                     </span>
                 </a>
                 <div class="hidden xl:flex items-center gap-4 text-sm font-medium">
                     <a href="{{ route('beranda') }}" class="hover:text-primary-200 transition">Beranda</a>
                     <a href="{{ route('alur') }}" class="hover:text-primary-200 transition">Alur Permintaan</a>
-                    <a href="{{ route('katalog.index') }}" class="hover:text-primary-200 transition">Katalog Data</a>
                     <a href="{{ route('permintaan.create') }}" class="hover:text-primary-200 transition">Permintaan Data</a>
                     <a href="{{ route('cek-status') }}" class="hover:text-primary-200 transition">Cek Status</a>
                     @if($pemohonAktif)
@@ -99,7 +101,6 @@
         <div id="menu-mobile" x-show="mobileMenu" x-cloak @click.outside="mobileMenu = false" class="xl:hidden bg-primary-600 px-4 py-3 space-y-1 text-sm">
             <a href="{{ route('beranda') }}" class="block py-3 hover:text-primary-200">Beranda</a>
             <a href="{{ route('alur') }}" class="block py-3 hover:text-primary-200">Alur Permintaan</a>
-            <a href="{{ route('katalog.index') }}" class="block py-3 hover:text-primary-200">Katalog Data</a>
             <a href="{{ route('permintaan.create') }}" class="block py-3 hover:text-primary-200">Permintaan Data</a>
             <a href="{{ route('cek-status') }}" class="block py-3 hover:text-primary-200">Cek Status</a>
             @if($pemohonAktif)
@@ -140,12 +141,12 @@
     <main id="konten-utama" tabindex="-1" class="min-h-screen">
         @if(session('success'))
             <div class="max-w-7xl mx-auto px-4 mt-4">
-                <div role="status" aria-live="polite" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow">{{ session('success') }}</div>
+                <div role="status" aria-live="polite" data-auto-dismiss="60000" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow">{{ session('success') }}</div>
             </div>
         @endif
         @if(session('error'))
             <div class="max-w-7xl mx-auto px-4 mt-4">
-                <div role="alert" aria-live="assertive" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow">{{ session('error') }}</div>
+                <div role="alert" aria-live="assertive" data-auto-dismiss="60000" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow">{{ session('error') }}</div>
             </div>
         @endif
         @yield('content')
@@ -153,17 +154,40 @@
 
     <footer class="bg-secondary-800 text-white mt-12 border-t-4 border-bpsOrange-500">
         <div class="max-w-7xl mx-auto px-4 py-8 text-center text-sm">
-            <img src="{{ asset('images/logo-bps-padanglawas.svg') }}" alt="Logo Badan Pusat Statistik" class="h-12 w-auto mx-auto mb-3">
-            <p class="font-semibold">BPS Kabupaten Padang Lawas</p>
-            <p class="text-primary-200 mt-1">Jl. Padang Lawas No. 1, Sibuhuan, Kec. Barumun, Kab. Padang Lawas, Sumatera Utara</p>
+            <img src="{{ asset('images/logo-siperinda.svg') }}" alt="Logo SIPERMINDA" class="h-12 w-auto mx-auto mb-3 object-contain">
+            <p class="font-semibold text-base">BPS Kabupaten Padang Lawas</p>
+            <p class="text-primary-200 mt-2 leading-relaxed">
+                Jl. Karya Pembangunan Lingkungan VI, Sibuhuan, Lubuk Barumun, Padang Lawas Regency, North Sumatra 74511
+            </p>
             <div class="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-primary-100">
                 <a href="{{ route('privasi') }}" class="hover:text-white hover:underline">Kebijakan Privasi</a>
                 <a href="{{ route('ketentuan') }}" class="hover:text-white hover:underline">Ketentuan Layanan</a>
             </div>
-            <p class="text-primary-200 mt-1">&copy; {{ date('Y') }} Badan Pusat Statistik. All rights reserved.</p>
+            <p class="text-primary-200 mt-2">&copy; {{ date('Y') }} Badan Pusat Statistik. All rights reserved.</p>
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-auto-dismiss]').forEach(function (element) {
+                const timeout = Number(element.dataset.autoDismiss || 60000);
+
+                setTimeout(function () {
+                    element.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(-4px)';
+
+                    setTimeout(function () {
+                        if (element.parentElement && element.parentElement.classList.contains('max-w-7xl')) {
+                            element.parentElement.style.display = 'none';
+                        } else {
+                            element.remove();
+                        }
+                    }, 450);
+                }, timeout);
+            });
+        });
+    </script>
     @yield('scripts')
     @stack('scripts')
 </body>

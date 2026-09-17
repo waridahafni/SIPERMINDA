@@ -9,15 +9,15 @@
 
     <div class="relative overflow-hidden bg-gradient-to-br from-secondary-800 via-secondary-700 to-primary-600 text-white">
         <div class="absolute inset-y-0 right-0 w-1/3 bg-primary-400/10 -skew-x-12" aria-hidden="true"></div>
-        <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 text-center">
-            <span class="relative inline-block bg-primary-400/20 border border-primary-200/30 text-white text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4">Panduan Layanan</span>
+        <div class="max-w-7xl mx-auto px-4 py-12 md:py-20 text-center">
+            <span class="relative inline-block bg-primary-400/20 border border-primary-200/30 text-white text-[11px] md:text-xs font-semibold tracking-[0.18em] uppercase px-4 py-1.5 rounded-full mb-4">Panduan Layanan</span>
             <h1 class="text-3xl md:text-5xl font-extrabold leading-tight">Alur Permintaan Data</h1>
-            <p class="text-lg md:text-xl text-primary-100 mt-4 max-w-2xl mx-auto">Ikuti langkah-langkah mudah berikut untuk mengajukan permintaan data statistik hingga data Anda diterima.</p>
+            <p class="text-base md:text-xl text-primary-100 mt-4 max-w-2xl mx-auto">Ikuti langkah-langkah mudah untuk mengajukan permintaan data statistik.</p>
             <div class="flex flex-wrap justify-center gap-4 mt-8">
-                <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="bg-white text-primary-600 font-semibold px-6 py-3 rounded-lg shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition">
-                    {{ $sudahMasuk ? 'Ajukan Sekarang' : 'Daftar & Ajukan' }}
+                <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="bg-white text-primary-600 font-semibold px-6 py-3 rounded-lg shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition text-base">
+                    {{ $sudahMasuk ? 'Ajukan Sekarang'  }}
                 </a>
-                <a href="{{ route('cek-status') }}" class="bg-transparent border-2 border-white/60 text-white font-semibold px-6 py-3 rounded-lg hover:bg-white/10 transition">Cek Status</a>
+                <a href="{{ route('cek-status') }}" class="bg-transparent border-2 border-white/60 text-white font-semibold px-6 py-3 rounded-lg hover:bg-white/10 transition text-base">Cek Status</a>
             </div>
             @unless($sudahMasuk)
                 <p class="mt-4 text-sm text-primary-100">
@@ -29,19 +29,19 @@
     </div>
 
     <div class="max-w-5xl mx-auto px-4 -mt-10">
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-            <div class="grid md:grid-cols-3 gap-6 text-center">
-                <div>
-                    <p class="text-4xl font-extrabold text-primary-500">100%</p>
-                    <p class="text-gray-500 text-sm mt-1">Online &amp; Tanpa Antre</p>
+        <div class="bg-white/95 backdrop-blur-sm rounded-[28px] shadow-[0_20px_50px_rgba(2,32,64,0.10)] p-3 md:p-4 border border-white/80">
+            <div class="grid md:grid-cols-3 gap-3 text-center">
+                <div class="flex min-h-[120px] flex-col items-center justify-center rounded-[20px] border border-blue-100 bg-gradient-to-b from-white to-blue-50/60 px-4 py-4 shadow-sm">
+                    <p class="text-3xl md:text-4xl font-extrabold text-primary-500 leading-none">100%</p>
+                    <p class="text-gray-600 text-sm md:text-base mt-3">Online &amp; Tanpa Antre</p>
                 </div>
-                <div>
-                    <p class="text-4xl font-extrabold text-primary-500">3-5</p>
-                    <p class="text-gray-500 text-sm mt-1">Hari Proses Permintaan</p>
+                <div class="flex min-h-[120px] flex-col items-center justify-center rounded-[20px] border border-blue-100 bg-gradient-to-b from-white to-blue-50/60 px-4 py-4 shadow-sm">
+                    <p class="text-3xl md:text-4xl font-extrabold text-primary-500 leading-none">1–2</p>
+                    <p class="text-gray-600 text-sm md:text-base mt-3">Hari Kerja</p>
                 </div>
-                <div>
-                    <p class="text-4xl font-extrabold text-primary-500">24/7</p>
-                    <p class="text-gray-500 text-sm mt-1">Pantau Status Kapan Saja</p>
+                <div class="flex min-h-[120px] flex-col items-center justify-center rounded-[20px] border border-blue-100 bg-gradient-to-b from-white to-blue-50/60 px-4 py-4 shadow-sm">
+                    <p class="text-3xl md:text-4xl font-extrabold text-primary-500 leading-none">24/7</p>
+                    <p class="text-gray-600 text-sm md:text-base mt-3">Pantau Status</p>
                 </div>
             </div>
         </div>
@@ -131,7 +131,6 @@
                 <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="bg-white text-secondary-600 font-semibold px-8 py-3 rounded-lg shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-600 transition">
                     {{ $sudahMasuk ? 'Ajukan Sekarang' : 'Daftar & Ajukan' }}
                 </a>
-                <a href="{{ route('katalog.index') }}" class="bg-transparent border-2 border-white/60 text-white font-semibold px-8 py-3 rounded-lg hover:bg-white/10 transition">Lihat Katalog</a>
             </div>
             @unless($sudahMasuk)
                 <p class="mt-4 text-sm text-secondary-100 relative">

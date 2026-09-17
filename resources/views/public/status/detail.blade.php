@@ -129,8 +129,6 @@
             $logTahap = $permintaan->approvalLog->keyBy('tahap');
             $urutan = [
                 'staf' => 'Verifikasi Staf',
-                'kasi' => 'Persetujuan Kasi',
-                'kabid' => 'Persetujuan Kabid',
             ];
         @endphp
 

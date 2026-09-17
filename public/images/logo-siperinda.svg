@@ -1,0 +1,22 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B5FA5"/>
+      <stop offset="1" stop-color="#15A3D7"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="30" y1="20" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F58220"/>
+      <stop offset="1" stop-color="#FDBA74"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="160" height="160" rx="26" fill="#F8FAFC"/>
+
+  <g>
+    <rect x="18" y="18" width="104" height="104" rx="24" fill="url(#g1)"/>
+    <path d="M55 42.5C68.5 51.5 79.5 56.5 94 57.5V83.5C76 82 64 76 51 67.5C42 61.5 33.5 53 27 42C31.5 39 37 36.5 43.5 34.5C47.5 37 51 39.5 55 42.5Z" fill="white" opacity="0.92"/>
+    <path d="M40 83C48.5 76.5 56 72.5 64 70.5C73.5 68 82 69.5 90 73.5V98.5C82.5 101 74.5 102 66.5 100.5C57.5 98.5 49 94 40 83Z" fill="url(#g2)"/>
+    <path d="M66.5 44V80.5" stroke="#0B5FA5" stroke-width="7" stroke-linecap="round"/>
+    <path d="M66.5 53C76.5 53 84.5 60.5 84.5 70.5C84.5 80.5 76.5 88 66.5 88C56.5 88 48.5 80.5 48.5 70.5C48.5 60.5 56.5 53 66.5 53Z" stroke="white" stroke-width="6"/>
+  </g>
+</svg>

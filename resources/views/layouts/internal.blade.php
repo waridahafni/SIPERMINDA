@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SIPERMINDA - Internal')</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo-siperinda.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -71,11 +72,13 @@
             :class="isDesktop ? 'relative' : 'fixed inset-y-0 left-0 z-50 shadow-2xl'"
             class="w-64 bg-secondary-800 text-white flex-shrink-0 overflow-y-auto flex flex-col border-t-4 border-primary-400"
             aria-label="Navigasi utama petugas">
-            <div class="p-4 border-b border-primary-400 flex items-center gap-3">
-                <img src="{{ asset('images/logo-bps-padanglawas.svg') }}" alt="Logo Badan Pusat Statistik" class="h-10 w-auto">
-                <div>
-                    <p class="font-bold text-lg leading-tight">SIPERMINDA</p>
-                    <p class="text-primary-200 text-xs">BPS Kab. Padang Lawas</p>
+            <div class="p-3.5 border-b border-primary-400 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-primary-300 via-primary-500 to-secondary-600 shadow-md ring-2 ring-white/15 flex items-center justify-center">
+                    <img src="{{ asset('images/logo-siperinda.svg') }}" alt="Logo SIPERMINDA" class="h-5 w-5 object-contain drop-shadow-sm">
+                </div>
+                <div class="leading-tight">
+                    <p class="font-extrabold text-[11px] tracking-wide text-white">SIPERMINDA</p>
+                    <p class="text-primary-100 text-[7px] font-medium tracking-[0.12em] uppercase">BPS Kab. Padang Lawas</p>
                 </div>
             </div>
             <nav class="p-3 space-y-1 text-sm">
@@ -153,16 +156,33 @@
 
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 @if(session('success'))
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow mb-4">{{ session('success') }}</div>
+                    <div data-auto-dismiss="60000" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow mb-4">{{ session('success') }}</div>
                 @endif
                 @if(session('error'))
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow mb-4">{{ session('error') }}</div>
+                    <div data-auto-dismiss="60000" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow mb-4">{{ session('error') }}</div>
                 @endif
                 @yield('content')
             </main>
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-auto-dismiss]').forEach(function (element) {
+                const timeout = Number(element.dataset.autoDismiss || 60000);
+
+                setTimeout(function () {
+                    element.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(-4px)';
+
+                    setTimeout(function () {
+                        element.remove();
+                    }, 450);
+                }, timeout);
+            });
+        });
+    </script>
     @yield('scripts')
     @stack('scripts')
 </body>

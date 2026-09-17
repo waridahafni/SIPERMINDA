@@ -181,8 +181,6 @@
                     };
                 $labelTahap = match($tahap) {
                     'staf' => 'Verifikasi Permintaan',
-                    'kasi' => 'Persetujuan Kasi',
-                    'kabid' => 'Persetujuan Kabid',
                     'upload' => 'Upload Data',
                     default => '',
                 };
