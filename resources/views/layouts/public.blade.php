@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'BPS Kabupaten Padang Lawas')</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo-siperinda.svg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-siperminda-mark.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,8 +36,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <a href="{{ route('beranda') }}" class="flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-white rounded" aria-label="Beranda BPS Kabupaten Padang Lawas">
-                    <div class="h-11 w-11 rounded-xl bg-gradient-to-br from-primary-300 via-primary-500 to-secondary-600 shadow-[0_6px_18px_rgba(5,102,154,0.42)] ring-2 ring-white/15 flex items-center justify-center shrink-0">
-                        <img src="{{ asset('images/logo-siperinda.svg') }}" alt="Logo SIPERMINDA" class="h-7 w-7 object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)]">
+                    <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-primary-300 via-primary-500 to-secondary-600 shadow-[0_6px_18px_rgba(5,102,154,0.42)] ring-2 ring-white/15 flex items-center justify-center shrink-0">
+                        <img src="{{ asset('images/logo-siperminda-mark.png') }}" alt="Logo SIPERMINDA" class="h-8 w-8 object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)]">
                     </div>
                     <span class="hidden sm:block leading-tight">
                         <span class="block text-[10px] font-semibold tracking-[0.18em] text-primary-200">SIPERMINDA</span>
@@ -47,10 +47,12 @@
                 <div class="hidden xl:flex items-center gap-4 text-sm font-medium">
                     <a href="{{ route('beranda') }}" class="hover:text-primary-200 transition">Beranda</a>
                     <a href="{{ route('alur') }}" class="hover:text-primary-200 transition">Alur Permintaan</a>
-                    <a href="{{ route('permintaan.create') }}" class="hover:text-primary-200 transition">Permintaan Data</a>
                     <a href="{{ route('cek-status') }}" class="hover:text-primary-200 transition">Cek Status</a>
                     @if($pemohonAktif)
+                        <a href="{{ route('pemohon.dashboard') }}" class="hover:text-primary-200 transition">Dashboard</a>
+                        <a href="{{ route('permintaan.create') }}" class="hover:text-primary-200 transition">Ajukan Permintaan</a>
                         <a href="{{ route('pemohon.permintaan.index') }}" class="hover:text-primary-200 transition">Permintaan Saya</a>
+                        <a href="{{ route('pemohon.profil') }}" class="hover:text-primary-200 transition">Profil Saya</a>
                         <span class="text-primary-200" aria-hidden="true">|</span>
                         <span class="text-white font-semibold max-w-32 truncate" title="{{ $pemohonAktif->nama }}">{{ $pemohonAktif->nama }}</span>
                         <form method="POST" action="{{ route('pemohon.keluar') }}">
@@ -101,12 +103,14 @@
         <div id="menu-mobile" x-show="mobileMenu" x-cloak @click.outside="mobileMenu = false" class="xl:hidden bg-primary-600 px-4 py-3 space-y-1 text-sm">
             <a href="{{ route('beranda') }}" class="block py-3 hover:text-primary-200">Beranda</a>
             <a href="{{ route('alur') }}" class="block py-3 hover:text-primary-200">Alur Permintaan</a>
-            <a href="{{ route('permintaan.create') }}" class="block py-3 hover:text-primary-200">Permintaan Data</a>
             <a href="{{ route('cek-status') }}" class="block py-3 hover:text-primary-200">Cek Status</a>
             @if($pemohonAktif)
                 <hr class="border-primary-400">
                 <span class="block py-3 font-semibold">{{ $pemohonAktif->nama }}</span>
+                <a href="{{ route('pemohon.dashboard') }}" class="block py-3 hover:text-primary-200">Dashboard</a>
+                <a href="{{ route('permintaan.create') }}" class="block py-3 hover:text-primary-200">Ajukan Permintaan</a>
                 <a href="{{ route('pemohon.permintaan.index') }}" class="block py-3 hover:text-primary-200">Permintaan Saya</a>
+                <a href="{{ route('pemohon.profil') }}" class="block py-3 hover:text-primary-200">Profil Saya</a>
                 <form method="POST" action="{{ route('pemohon.keluar') }}">
                     @csrf
                     <button type="submit" class="w-full text-left py-3 font-semibold hover:text-primary-200">Keluar</button>
@@ -152,12 +156,14 @@
         @yield('content')
     </main>
 
-    <footer class="bg-secondary-800 text-white mt-12 border-t-4 border-bpsOrange-500">
-        <div class="max-w-7xl mx-auto px-4 py-8 text-center text-sm">
-            <img src="{{ asset('images/logo-siperinda.svg') }}" alt="Logo SIPERMINDA" class="h-12 w-auto mx-auto mb-3 object-contain">
+    <footer class="bg-secondary-800 text-white mt-16 border-t-4 border-bpsOrange-500">
+        <div class="max-w-7xl mx-auto px-4 py-10 text-center text-sm">
+            <div class="inline-flex rounded-lg bg-white px-3 py-2 shadow-sm mb-3">
+                <img src="{{ asset('images/logo-siperminda-wordmark.png') }}" alt="SIPERMINDA — Sistem Permintaan Data" class="h-10 w-auto object-contain sm:h-11">
+            </div>
             <p class="font-semibold text-base">BPS Kabupaten Padang Lawas</p>
             <p class="text-primary-200 mt-2 leading-relaxed">
-                Jl. Karya Pembangunan Lingkungan VI, Sibuhuan, Lubuk Barumun, Padang Lawas Regency, North Sumatra 74511
+                Jl. Karya Pembangunan Lingkungan VI, Sibuhuan, Lubuk Barumun, Kabupaten Padang Lawas, Sumatera Utara 74511
             </p>
             <div class="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-primary-100">
                 <a href="{{ route('privasi') }}" class="hover:text-white hover:underline">Kebijakan Privasi</a>

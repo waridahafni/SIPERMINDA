@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SIPERMINDA - Internal')</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo-siperinda.svg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-siperminda-mark.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
             aria-label="Navigasi utama petugas">
             <div class="p-3.5 border-b border-primary-400 flex items-center gap-3">
                 <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-primary-300 via-primary-500 to-secondary-600 shadow-md ring-2 ring-white/15 flex items-center justify-center">
-                    <img src="{{ asset('images/logo-siperinda.svg') }}" alt="Logo SIPERMINDA" class="h-5 w-5 object-contain drop-shadow-sm">
+                    <img src="{{ asset('images/logo-siperminda-mark.png') }}" alt="Logo SIPERMINDA" class="h-5 w-5 object-contain drop-shadow-sm">
                 </div>
                 <div class="leading-tight">
                     <p class="font-extrabold text-[11px] tracking-wide text-white">SIPERMINDA</p>

@@ -144,7 +144,7 @@ class UnggahDokumenTest extends TestCase
 
         return PermintaanData::create([
             'pemohon_id' => $pemohon->id, 'nomor_tiket' => 'BPS/PD/2026/00001',
-            'jenis_data' => 'Statistik', 'tujuan_penggunaan' => 'Penelitian', 'status' => 'disetujui_petugas',
+            'jenis_data' => 'Statistik', 'tujuan_penggunaan' => 'Penelitian', 'status' => 'disetujui_kabid',
         ]);
     }
 
@@ -258,7 +258,7 @@ class UnggahDokumenTest extends TestCase
             $this->post(route('internal.permintaan.upload', $permintaan), ['upload_token' => $izin['finalize_token']])
                 ->assertSessionHasErrors('file_hasil');
             $this->assertNull($permintaan->fresh()->file_hasil_path);
-            $this->assertSame('disetujui_petugas', $permintaan->fresh()->status);
+            $this->assertSame('disetujui_kabid', $permintaan->fresh()->status);
         }
         $this->assertNotContains('CopyObject', array_column($this->commands, 0));
     }

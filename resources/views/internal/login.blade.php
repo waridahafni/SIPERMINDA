@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login Internal - SIPERMINDA</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-siperminda-mark.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,8 +26,9 @@
 <body class="font-sans antialiased bg-gradient-to-br from-primary-500 to-primary-800 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-white">SIPERMINDA</h1>
-            <p class="text-primary-200 mt-1">Sistem Informasi Permintaan Data Statistik</p>
+            <div class="inline-flex rounded-xl bg-white px-4 py-2.5 shadow-lg">
+                <img src="{{ asset('images/logo-siperminda-wordmark.png') }}" alt="SIPERMINDA — Sistem Permintaan Data" class="h-12 w-auto object-contain">
+            </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-2xl p-8">

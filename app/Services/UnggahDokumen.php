@@ -68,6 +68,10 @@ class UnggahDokumen
         if (! self::langsung()) {
             $file = $request->file($field);
 
+            if (is_array($file)) {
+                $file = reset($file);
+            }
+
             return [
                 'path' => $file->storeAs($direktori, Str::uuid().'.'.$file->extension(), DokumenStorage::namaDisk()),
                 'ukuran' => $file->getSize(),

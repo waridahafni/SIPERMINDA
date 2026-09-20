@@ -63,8 +63,6 @@ Dokumen ini merangkum aturan bisnis (business rules) yang berlaku dalam sistem, 
 |---|---|
 | Pemohon | Ajukan permintaan, cek status, unduh data (sesuai kepemilikan) |
 | Staf | Verifikasi kelengkapan permintaan, upload/kelola katalog data terbuka, upload hasil (jika ditunjuk) |
-| Kasi | Approval tahap 2, dapat menolak/meminta info tambahan |
-| Kabid | Approval final, dapat menolak/meminta info tambahan |
 | Admin | Kelola user & role, akses penuh ke seluruh data & laporan |
 
 ## 10. Aturan Akun Pemohon Publik (Keputusan Awal 19 Agustus 2026)

@@ -73,6 +73,9 @@ class HardeningKeamananTest extends TestCase
             'email' => null,
             'jenis_pemohon' => 'publik',
             'nama_instansi' => null,
+            'provinsi' => 'Sumatera Utara',
+            'kabupaten_kota' => 'Padang Lawas',
+            'alamat_lengkap' => 'Jl. Pengujian No. 1',
         ], $tambahan);
     }
 

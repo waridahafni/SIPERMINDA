@@ -35,6 +35,7 @@ class WhatsAppGatewayTest extends TestCase
     {
         return $this->post('/daftar/kirim-otp', [
             'nama' => 'Pemohon Meta', 'no_hp' => '081234567890', 'jenis_pemohon' => 'publik',
+            'provinsi' => 'Sumatera Utara', 'kabupaten_kota' => 'Padang Lawas', 'alamat_lengkap' => 'Jl. Pengujian No. 1',
         ]);
     }
 

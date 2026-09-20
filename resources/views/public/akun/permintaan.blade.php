@@ -28,7 +28,9 @@
                     @php
                         $labelStatus = match($item->status) {
                             'diajukan' => 'Diajukan',
-                            'disetujui_petugas' => 'Disetujui Petugas',
+                            'diverifikasi_staf' => 'Diverifikasi Staf',
+                            'disetujui_kasi' => 'Disetujui Kasi',
+                            'disetujui_kabid' => 'Disetujui Kabid',
                             'menunggu_info_pemohon' => 'Perlu Jawaban Anda',
                             'ditolak' => 'Ditolak',
                             'data_siap' => 'Data Siap',
@@ -39,7 +41,7 @@
                             'ditolak' => 'bg-red-100 text-red-700',
                             'data_siap', 'selesai' => 'bg-green-100 text-green-700',
                             'menunggu_info_pemohon' => 'bg-amber-100 text-amber-800',
-                            'disetujui_petugas' => 'bg-blue-100 text-blue-700',
+                            'disetujui_kasi', 'disetujui_kabid' => 'bg-indigo-100 text-indigo-700',
                             default => 'bg-yellow-100 text-yellow-700',
                         };
                     @endphp

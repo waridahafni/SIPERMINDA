@@ -1,0 +1,14 @@
+<svg width="720" height="240" viewBox="0 0 720 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="240" fill="white"/>
+  <g transform="translate(36 36)">
+    <rect width="168" height="168" rx="38" fill="#05669A"/>
+    <path d="M113 43C99 32 79 27 59 33C39 39 28 53 31 68C34 83 48 88 72 94L96 100C111 104 116 111 113 122C109 136 93 144 74 143C57 143 43 137 32 127" stroke="white" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="126" cy="45" r="12" fill="#F58220"/>
+    <circle cx="42" cy="127" r="10" fill="#6DBD2B"/>
+  </g>
+  <g transform="translate(244 77)">
+    <text x="0" y="45" fill="#063D61" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" letter-spacing="1">SIPERMINDA</text>
+    <rect x="2" y="66" width="88" height="5" rx="2.5" fill="#F58220"/>
+    <text x="0" y="101" fill="#6B7280" font-family="Arial, Helvetica, sans-serif" font-size="19" letter-spacing="0.5">Sistem Permintaan Data</text>
+  </g>
+</svg>

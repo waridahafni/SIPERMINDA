@@ -42,6 +42,7 @@ return [
         'template_language' => env('WHATSAPP_OTP_TEMPLATE_LANGUAGE', 'id'),
         'status_template_name' => env('WHATSAPP_STATUS_TEMPLATE_NAME'),
         'status_template_language' => env('WHATSAPP_STATUS_TEMPLATE_LANGUAGE', 'id'),
+        'internal_recipients' => env('WHATSAPP_INTERNAL_RECIPIENTS', ''),
         'timeout_seconds' => (int) env('WHATSAPP_TIMEOUT_SECONDS', 10),
     ],
 

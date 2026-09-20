@@ -27,10 +27,12 @@ class InfoTambahanTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
     }
 
-    public function test_petugas_dapat_meminta_info_pada_tahap_yang_tepat(): void
+    public function test_staf_kasi_dan_kabid_dapat_meminta_info_pada_tahap_yang_tepat(): void
     {
         $skenario = [
             ['role' => 'staf', 'status' => 'diajukan', 'tahap' => 'staf'],
+            ['role' => 'kasi', 'status' => 'diverifikasi_staf', 'tahap' => 'kasi'],
+            ['role' => 'kabid', 'status' => 'disetujui_kasi', 'tahap' => 'kabid'],
         ];
 
         foreach ($skenario as $item) {
@@ -104,6 +106,8 @@ class InfoTambahanTest extends TestCase
     {
         $skenario = [
             ['role' => 'staf', 'status' => 'diajukan', 'status_kembali' => 'diajukan'],
+            ['role' => 'kasi', 'status' => 'diverifikasi_staf', 'status_kembali' => 'diverifikasi_staf'],
+            ['role' => 'kabid', 'status' => 'disetujui_kasi', 'status_kembali' => 'disetujui_kasi'],
         ];
 
         foreach ($skenario as $item) {

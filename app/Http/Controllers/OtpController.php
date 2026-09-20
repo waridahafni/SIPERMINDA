@@ -361,6 +361,9 @@ class OtpController extends Controller
                 'email' => $dataPemohon['email'] ?? null,
                 'jenis_pemohon' => $dataPemohon['jenis_pemohon'] ?? null,
                 'nama_instansi' => $dataPemohon['nama_instansi'] ?? null,
+                'provinsi' => $dataPemohon['provinsi'] ?? null,
+                'kabupaten_kota' => $dataPemohon['kabupaten_kota'] ?? null,
+                'alamat_lengkap' => $dataPemohon['alamat_lengkap'] ?? null,
             ]);
             $request->session()->forget('pendaftaran_terverifikasi');
             $request->session()->put([
@@ -702,6 +705,9 @@ class OtpController extends Controller
             'email' => $data['email'] ?? null,
             'jenis_pemohon' => $data['jenis_pemohon'] ?? 'publik',
             'nama_instansi' => $data['nama_instansi'] ?? null,
+            'provinsi' => $data['provinsi'] ?? null,
+            'kabupaten_kota' => $data['kabupaten_kota'] ?? null,
+            'alamat_lengkap' => $data['alamat_lengkap'] ?? null,
         ];
     }
 }

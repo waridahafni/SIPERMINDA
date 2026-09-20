@@ -8,9 +8,11 @@ use App\Models\NomorTiketCounter;
 use App\Models\NotifikasiLog;
 use App\Models\Pemohon;
 use App\Models\PermintaanData;
+use App\Models\PermintaanFeedback;
 use App\Models\PermintaanKlarifikasi;
 use App\Models\UnduhanLog;
 use App\Support\DokumenStorage;
+use App\Services\WhatsApp\NotifikasiStatusPermintaan;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -152,6 +154,11 @@ class PermintaanController extends Controller
             }
         }
 
+        if ($dibuatBaru) {
+            app(NotifikasiStatusPermintaan::class)->kirim($permintaan, 'diajukan');
+            app(NotifikasiStatusPermintaan::class)->kirimKePetugas($permintaan, 'permintaan_baru');
+        }
+
         return redirect()->route('permintaan.selesai', $permintaan);
     }
 
@@ -193,10 +200,46 @@ class PermintaanController extends Controller
             'downloaded_at' => now(),
         ]);
 
+        app(NotifikasiStatusPermintaan::class)->kirimKePetugas($permintaan, 'hasil_diunduh');
+
         $ekstensi = pathinfo($permintaan->file_hasil_path, PATHINFO_EXTENSION);
         $namaUnduhan = 'hasil-'.Str::slug($permintaan->nomor_tiket).'.'.$ekstensi;
 
         return DokumenStorage::unduh($permintaan->file_hasil_path, $namaUnduhan);
+    }
+
+    public function simpanFeedback(PermintaanData $permintaan, Request $request)
+    {
+        $pemohon = $this->pemohonAktif($request);
+
+        if ((int) $permintaan->pemohon_id !== (int) $pemohon->id) {
+            abort(404);
+        }
+
+        if (! in_array($permintaan->status, ['data_siap', 'selesai'], true)) {
+            return redirect()->back()->with('error', 'Feedback hanya dapat diberikan setelah data siap diunduh.');
+        }
+
+        $data = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'komentar' => 'nullable|string|max:2000',
+        ]);
+
+        PermintaanFeedback::updateOrCreate(
+            [
+                'permintaan_data_id' => $permintaan->id,
+                'pemohon_id' => $pemohon->id,
+            ],
+            [
+                'rating' => $data['rating'],
+                'komentar' => $data['komentar'] ?? null,
+            ]
+        );
+
+        app(NotifikasiStatusPermintaan::class)->kirimKePetugas($permintaan, 'feedback_diterima');
+
+        return redirect()->route('pemohon.permintaan.show', $permintaan)
+            ->with('success', 'Terima kasih atas feedback Anda.');
     }
 
     public function jawabInfoTambahan(PermintaanData $permintaan, Request $request)
@@ -251,6 +294,7 @@ class PermintaanController extends Controller
         });
 
         $this->kirimNotifikasiJawabanInfo($permintaan, $klarifikasi);
+        app(NotifikasiStatusPermintaan::class)->kirimKePetugas($permintaan, 'info_tambahan_dijawab');
 
         return redirect()
             ->route('pemohon.permintaan.show', $permintaan)

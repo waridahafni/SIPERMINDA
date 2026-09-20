@@ -38,7 +38,7 @@ class StorageProductionTest extends TestCase
 
         return PermintaanData::create([
             'pemohon_id' => $pemohon->id, 'nomor_tiket' => 'BPS/PD/2026/00001',
-            'jenis_data' => 'Statistik', 'tujuan_penggunaan' => 'Penelitian', 'status' => 'disetujui_petugas',
+            'jenis_data' => 'Statistik', 'tujuan_penggunaan' => 'Penelitian', 'status' => 'disetujui_kabid',
         ]);
     }
 
@@ -93,7 +93,7 @@ class StorageProductionTest extends TestCase
             'file_hasil' => UploadedFile::fake()->create('hasil.pdf', 8, 'application/pdf'),
         ])->assertStatus(500);
         $this->assertNull($permintaan->fresh()->file_hasil_path);
-        $this->assertSame('disetujui_petugas', $permintaan->status);
+        $this->assertSame('disetujui_kabid', $permintaan->status);
         $this->assertDatabaseCount('notifikasi_log', 0);
     }
 

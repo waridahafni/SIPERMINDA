@@ -9,7 +9,9 @@
         @php
             $badge = match($permintaan->status) {
                 'diajukan' => 'yellow',
-                'disetujui_petugas' => 'blue',
+                'diverifikasi_staf' => 'blue',
+                'disetujui_kasi' => 'indigo',
+                'disetujui_kabid' => 'purple',
                 'menunggu_info_pemohon' => 'amber',
                 'ditolak' => 'red',
                 'data_siap' => 'green',
@@ -103,7 +105,8 @@
                         'kabid' => $logTahap->get('kabid'),
                     ];
                     $urutan = [
-                        'staf' => 'Persetujuan Petugas',
+                        'staf' => 'Verifikasi Staf',
+
                         'upload' => 'Upload Data',
                     ];
                 @endphp
@@ -171,12 +174,16 @@
                 $user = Auth::user();
                 $tahap = match($permintaan->status) {
                     'diajukan' => 'staf',
-                    'disetujui_petugas' => 'upload',
+                    'diverifikasi_staf' => 'kasi',
+                    'disetujui_kasi' => 'kabid',
+                    'disetujui_kabid' => 'upload',
                     default => null,
                 };
                 $bisaTindak = $tahap && !in_array($tahap, ['upload'])
                     && match($tahap) {
                         'staf' => $user->can('verifikasi-permintaan'),
+                        'kasi' => $user->can('approve-level-1'),
+                        'kabid' => $user->can('approve-level-2'),
                         default => false,
                     };
                 $labelTahap = match($tahap) {
@@ -245,10 +252,11 @@
                         @csrf
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">File Data (PDF/Excel/ZIP/CSV)</label>
-                            <input type="file" name="file_hasil" required accept=".pdf,.xlsx,.xls,.csv,.zip"
+                            <input type="file" @unless(\App\Services\UnggahDokumen::langsung()) name="file_hasil" @endunless required accept=".pdf,.xlsx,.xls,.csv,.zip"
                                 class="w-full text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:bg-primary-50 file:text-primary-700 file:font-medium">
                             @error('file_hasil') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
+                        @include('internal.partials.unggah-langsung', ['tujuan' => 'hasil-permintaan', 'target' => $permintaan->id])
                         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition text-sm">Upload & Selesaikan</button>
                     </form>
                 </div>

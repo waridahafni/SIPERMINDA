@@ -27,4 +27,9 @@ class Pemohon extends Model
     {
         return $this->hasMany(UnduhanLog::class);
     }
+
+    public function feedback(): HasMany
+    {
+        return $this->hasMany(PermintaanFeedback::class);
+    }
 }

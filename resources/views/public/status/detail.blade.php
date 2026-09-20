@@ -6,7 +6,9 @@
     @php
         $labelStatus = match($permintaan->status) {
             'diajukan' => 'Diajukan',
-            'disetujui_petugas' => 'Disetujui Petugas',
+            'diverifikasi_staf' => 'Diverifikasi Staf',
+            'disetujui_kasi' => 'Disetujui Kasi',
+            'disetujui_kabid' => 'Disetujui Kabid',
             'menunggu_info_pemohon' => 'Menunggu Info Pemohon',
             'ditolak' => 'Ditolak',
             'data_siap' => 'Data Siap',
@@ -28,7 +30,9 @@
                 <span role="status" aria-label="Status permintaan: {{ $labelStatus }}" class="text-xs font-bold px-3 py-1 rounded-full
                     @switch($permintaan->status)
                         @case('diajukan') bg-yellow-100 text-yellow-800 @break
-                        @case('disetujui_petugas') bg-blue-100 text-blue-800 @break
+                        @case('diverifikasi_staf') bg-blue-100 text-blue-800 @break
+                        @case('disetujui_kasi') bg-indigo-100 text-indigo-800 @break
+                        @case('disetujui_kabid') bg-purple-100 text-purple-800 @break
                         @case('menunggu_info_pemohon') bg-amber-100 text-amber-800 @break
                         @case('ditolak') bg-red-100 text-red-800 @break
                         @case('data_siap') bg-green-100 text-green-800 @break
@@ -62,73 +66,13 @@
             </div>
         </div>
 
-        @php
-            $labelKeputusan = [
-                'setuju' => 'Permintaan disetujui petugas',
-                'tolak' => 'Permintaan ditolak',
-                'data_siap' => 'Data siap diunduh',
-                'selesai' => 'Permintaan selesai',
-            ];
-            $timeline = collect([[
-                'waktu' => $permintaan->created_at,
-                'judul' => 'Permintaan diajukan',
-                'keterangan' => 'Nomor tiket '.$permintaan->nomor_tiket.' berhasil dibuat.',
-                'warna' => 'bg-primary-500',
-            ]])
-                ->merge($permintaan->approvalLog->map(fn ($log) => [
-                    'waktu' => $log->created_at,
-                    'judul' => $labelKeputusan[$log->keputusan] ?? 'Status permintaan diperbarui',
-                    'keterangan' => null,
-                    'warna' => $log->keputusan === 'tolak' ? 'bg-red-500' : 'bg-green-600',
-                ]))
-                ->merge($permintaan->klarifikasi->flatMap(function ($klarifikasi) {
-                    $peristiwa = [[
-                        'waktu' => $klarifikasi->created_at,
-                        'judul' => 'Petugas meminta informasi tambahan',
-                        'keterangan' => null,
-                        'warna' => 'bg-amber-500',
-                    ]];
-
-                    if ($klarifikasi->dijawab_at) {
-                        $peristiwa[] = [
-                            'waktu' => $klarifikasi->dijawab_at,
-                            'judul' => 'Informasi tambahan dijawab',
-                            'keterangan' => null,
-                            'warna' => 'bg-primary-500',
-                        ];
-                    }
-
-                    return $peristiwa;
-                }))
-                ->sortBy('waktu')
-                ->values();
-        @endphp
-
-        <section class="mb-10" aria-labelledby="timeline-status">
-            <h2 id="timeline-status" class="text-lg font-semibold text-gray-800 mb-4">Timeline Status</h2>
-            <ol class="space-y-0">
-                @foreach($timeline as $peristiwa)
-                    <li class="flex gap-4">
-                        <div class="flex flex-col items-center">
-                            <span class="mt-1 h-3.5 w-3.5 rounded-full {{ $peristiwa['warna'] }} ring-4 ring-white shadow"></span>
-                            @if(! $loop->last)<span class="my-1 w-0.5 flex-1 bg-gray-200"></span>@endif
-                        </div>
-                        <div class="pb-6">
-                            <p class="font-semibold text-gray-800">{{ $peristiwa['judul'] }}</p>
-                            <time class="block text-sm text-gray-500">{{ $peristiwa['waktu']->format('d M Y H:i') }}</time>
-                            @if($peristiwa['keterangan'])<p class="mt-1 text-sm text-gray-600">{{ $peristiwa['keterangan'] }}</p>@endif
-                        </div>
-                    </li>
-                @endforeach
-            </ol>
-        </section>
-
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Detail Verifikasi</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Riwayat Proses</h2>
 
         @php
             $logTahap = $permintaan->approvalLog->keyBy('tahap');
             $urutan = [
                 'staf' => 'Verifikasi Staf',
+
             ];
         @endphp
 
@@ -161,6 +105,9 @@
                         <p class="font-semibold text-gray-800">{{ $label }}</p>
                         @if($log)
                         <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }}</p>
+                            @if($log->catatan)
+                                <p class="text-sm text-gray-600 mt-1">{{ $log->catatan }}</p>
+                            @endif
                         @endif
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AkunPemohonController;
 use App\Http\Controllers\Internal\DashboardController;
 use App\Http\Controllers\Internal\KatalogController as InternalKatalogController;
 use App\Http\Controllers\Internal\LaporanController;
@@ -40,6 +41,10 @@ Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->middlew
 
 // Permintaan Data (butuh OTP)
 Route::middleware(['pemohon.otp'])->group(function () {
+    Route::get('/akun', [AkunPemohonController::class, 'dashboard'])->name('pemohon.dashboard');
+    Route::get('/akun/profil', [AkunPemohonController::class, 'profil'])->name('pemohon.profil');
+    Route::get('/akun/profil/edit', [AkunPemohonController::class, 'editProfil'])->name('pemohon.profil.edit');
+    Route::put('/akun/profil', [AkunPemohonController::class, 'updateProfil'])->name('pemohon.profil.update');
     Route::get('/akun/permintaan', [PermintaanController::class, 'indexPemohon'])->name('pemohon.permintaan.index');
     Route::get('/akun/permintaan/{permintaan}', [PermintaanController::class, 'showPemohon'])->name('pemohon.permintaan.show');
     Route::post('/akun/permintaan/{permintaan}/info-tambahan', [PermintaanController::class, 'jawabInfoTambahan'])
@@ -55,6 +60,7 @@ Route::middleware(['pemohon.otp'])->group(function () {
         ->name('permintaan.store');
     Route::get('/permintaan/{permintaan}/selesai', [PermintaanController::class, 'selesai'])->name('permintaan.selesai');
     Route::get('/permintaan/{permintaan}/unduh', [PermintaanController::class, 'unduhHasil'])->name('permintaan.unduh');
+    Route::post('/permintaan/{permintaan}/feedback', [PermintaanController::class, 'simpanFeedback'])->name('permintaan.feedback');
 });
 
 // Status tracking (tanpa OTP, verifikasi tiket + no HP)

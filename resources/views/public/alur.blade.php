@@ -15,7 +15,7 @@
             <p class="text-base md:text-xl text-primary-100 mt-4 max-w-2xl mx-auto">Ikuti langkah-langkah mudah untuk mengajukan permintaan data statistik.</p>
             <div class="flex flex-wrap justify-center gap-4 mt-8">
                 <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="bg-white text-primary-600 font-semibold px-6 py-3 rounded-lg shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition text-base">
-                    {{ $sudahMasuk ? 'Ajukan Sekarang'  }}
+                    {{ $sudahMasuk ? 'Ajukan Sekarang' : 'Daftar & Ajukan' }}
                 </a>
                 <a href="{{ route('cek-status') }}" class="bg-transparent border-2 border-white/60 text-white font-semibold px-6 py-3 rounded-lg hover:bg-white/10 transition text-base">Cek Status</a>
             </div>
@@ -87,7 +87,7 @@
                 ],
                 [
                     'nomor' => '5',
-                    'judul' => 'Data Diterima &amp; Diunduh',
+                    'judul' => 'Data Diterima & Diunduh',
                     'deskripsi' => 'Saat data siap, masuk ke akun pemohon yang mengajukan permintaan untuk mengunduh file hasil dengan aman.',
                     'warna' => 'bg-bpsOrange-500',
                     'lingkaran' => 'ring-bpsOrange-100',

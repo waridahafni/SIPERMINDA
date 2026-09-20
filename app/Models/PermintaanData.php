@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PermintaanData extends Model
 {
@@ -66,6 +67,16 @@ class PermintaanData extends Model
     public function unduhanLog(): HasMany
     {
         return $this->hasMany(UnduhanLog::class);
+    }
+
+    public function hasilFiles(): HasMany
+    {
+        return $this->hasMany(PermintaanHasilFile::class);
+    }
+
+    public function feedback(): HasOne
+    {
+        return $this->hasOne(PermintaanFeedback::class);
     }
 
     public function notifikasiLog(): HasMany

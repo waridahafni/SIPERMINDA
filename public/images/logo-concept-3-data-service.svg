@@ -1,0 +1,18 @@
+<svg width="720" height="240" viewBox="0 0 720 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="240" fill="white"/>
+  <g transform="translate(36 36)">
+    <rect width="168" height="168" rx="28" fill="#E6F4FB"/>
+    <path d="M43 65C43 53.954 51.954 45 63 45H118C129.046 45 138 53.954 138 65V91C138 102.046 129.046 111 118 111H91L68 131V111H63C51.954 111 43 102.046 43 91V65Z" fill="#05669A"/>
+    <path d="M64 78L78 64L91 76L115 53" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="64" cy="78" r="6" fill="#F58220"/>
+    <circle cx="78" cy="64" r="6" fill="#6DBD2B"/>
+    <circle cx="91" cy="76" r="6" fill="#F58220"/>
+    <circle cx="115" cy="53" r="6" fill="#6DBD2B"/>
+    <path d="M62 142H124" stroke="#F58220" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(244 77)">
+    <text x="0" y="45" fill="#063D61" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" letter-spacing="1">SIPERMINDA</text>
+    <rect x="2" y="66" width="88" height="5" rx="2.5" fill="#05669A"/>
+    <text x="0" y="101" fill="#6B7280" font-family="Arial, Helvetica, sans-serif" font-size="19" letter-spacing="0.5">Sistem Permintaan Data</text>
+  </g>
+</svg>

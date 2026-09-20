@@ -5,71 +5,82 @@
 @section('content')
     @php($sudahMasuk = session()->has('pemohon_id'))
 
-    <div class="bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-        <div class="max-w-7xl mx-auto px-4 py-20 md:py-28 text-center">
-            <h1 class="text-3xl md:text-5xl font-extrabold leading-tight">Selamat Datang di Portal Data<br>BPS Kabupaten Padang Lawas</h1>
-            <p class="text-lg md:text-xl text-primary-200 mt-4 max-w-2xl mx-auto">Layanan permintaan data statistik yang cepat, mudah, dan transparan untuk masyarakat dan instansi.</p>
-            <div class="flex flex-wrap justify-center gap-4 mt-8">
-                <a href="{{ route('permintaan.create') }}" class="bg-white text-primary-600 font-semibold px-6 py-3 rounded-lg shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition">Ajukan Permintaan Data</a>
-                <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="bg-secondary-500 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-secondary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition">
-                    {{ $sudahMasuk ? 'Ajukan Permintaan' : '' }}
-                </a>
+    <section class="relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-800 text-white" aria-labelledby="hero-title">
+        <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full border-[24px] border-white/10" aria-hidden="true"></div>
+        <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-[1.15fr_0.85fr] md:py-20 lg:px-8">
+            <div class="text-center md:text-left">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-primary-100">Layanan resmi BPS Kabupaten Padang Lawas</p>
+                <h1 id="hero-title" class="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl md:text-5xl">Permintaan Data Lebih Mudah, Terpantau, dan Terintegrasi.</h1>
+                <p class="mt-5 max-w-2xl text-base leading-relaxed text-primary-100 md:text-lg">SIPERMINDA membantu masyarakat dan instansi mengajukan permintaan data kepada BPS Kabupaten Padang Lawas secara online, transparan, dan efisien.</p>
+                <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row md:justify-start">
+                    <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="inline-flex min-h-12 items-center justify-center rounded-lg bg-white px-6 py-3 font-semibold text-primary-600 shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition">Ajukan Permintaan</a>
+                    <a href="{{ route('cek-status') }}" class="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/60 px-6 py-3 font-semibold text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition">Cek Status</a>
+                </div>
             </div>
-            @unless($sudahMasuk)
-                <p class="mt-4 text-sm text-primary-100">
-                    Sudah punya akun pemohon?
-                    <a href="{{ route('pemohon.masuk') }}" class="font-semibold text-white underline underline-offset-4 hover:text-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded">Masuk Pemohon</a>
-                </p>
-            @endunless
+            <div class="relative mx-auto flex w-full max-w-sm flex-col items-center justify-center overflow-hidden rounded-2xl bg-white p-8 text-center shadow-2xl md:mx-0 md:ml-auto" aria-hidden="true">
+                <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-bpsGreen-500"></div>
+                <div class="absolute -right-14 -top-14 h-36 w-36 rounded-full bg-primary-50" aria-hidden="true"></div>
+                <div class="absolute -bottom-16 -left-16 h-32 w-32 rounded-full bg-bpsGreen-50" aria-hidden="true"></div>
+                <img src="{{ asset('images/logo-siperminda-mark.png') }}" alt="" class="relative h-28 w-28 object-contain drop-shadow-[0_10px_16px_rgba(5,102,154,0.22)] sm:h-36 sm:w-36">
+                <div class="relative mt-4"><p class="text-lg font-extrabold tracking-[0.14em] text-primary-700">SIPERMINDA</p><p class="mt-1 text-xs font-medium tracking-wide text-gray-500">Sistem Permintaan Data</p></div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <div class="max-w-7xl mx-auto px-4 -mt-10">
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
-                <div class="w-14 h-14 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-7 h-7" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <h3 class="font-bold text-lg text-gray-800">Alur Permintaan Data</h3>
-                <p class="text-gray-500 text-sm mt-2 flex-1">Pahami langkah mudah mengajukan permintaan hingga data diterima.</p>
-                <a href="{{ route('alur') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Lihat Alur &rarr;</a>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
-                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-7 h-7" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                </div>
-                <h3 class="font-bold text-lg text-gray-800">Permintaan Data Mudah</h3>
-                <p class="text-gray-500 text-sm mt-2 flex-1">Ajukan kebutuhan data Anda dengan proses yang cepat, aman, dan terstruktur.</p>
-                <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Ajukan Sekarang &rarr;</a>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
-                <div class="w-14 h-14 bg-secondary-100 text-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-7 h-7" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
-                <h3 class="font-bold text-lg text-gray-800">Ajukan Permintaan Data</h3>
-                <p class="text-gray-500 text-sm mt-2 flex-1">Butuh data tertentu? Ajukan permintaan data statistik melalui akun pemohon.</p>
-                <a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">
-                    {{ $sudahMasuk ? 'Ajukan' : 'Daftar & Ajukan' }} &rarr;
-                </a>
-                @unless($sudahMasuk)
-                    <a href="{{ route('pemohon.masuk') }}" class="inline-block mt-2 text-gray-500 font-medium text-xs hover:text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">Sudah punya akun? Masuk</a>
-                @endunless
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center flex flex-col hover:shadow-xl transition">
-                <div class="w-14 h-14 bg-yellow-100 text-Daftar & Ajukanyellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-7 h-7" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                </div>
-                <h3 class="font-bold text-lg text-gray-800">Cek Status Permintaan</h3>
-                <p class="text-gray-500 text-sm mt-2 flex-1">Pantau perkembangan permintaan data Anda secara real-time.</p>
-                <a href="{{ route('cek-status') }}" class="inline-block mt-4 text-primary-500 font-semibold text-sm hover:underline">Cek Sekarang &rarr;</a>
-            </div>
+    <section class="relative z-10 mx-auto -mt-7 max-w-6xl px-4 sm:px-6 lg:px-8" aria-label="Manfaat utama layanan">
+        <div class="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl md:grid-cols-3">
+            <div class="flex items-center gap-4 border-b border-gray-100 px-5 py-5 md:border-b-0 md:border-r"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span><div><p class="font-bold text-gray-800">1–2 Hari Kerja</p><p class="mt-0.5 text-sm text-gray-500">Target layanan</p></div></div>
+            <div class="flex items-center gap-4 border-b border-gray-100 px-5 py-5 md:border-b-0 md:border-r"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-bpsGreen-100 text-bpsGreen-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12a9 9 0 01-9 9 9.7 9.7 0 01-4.8-1.28L3 21l1.28-4.2A9 9 0 1121 12z"/></svg></span><div><p class="font-bold text-gray-800">WhatsApp Update</p><p class="mt-0.5 text-sm text-gray-500">Notifikasi perkembangan</p></div></div>
+            <div class="flex items-center gap-4 px-5 py-5"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-bpsOrange-50 text-bpsOrange-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a1 1 0 01-1 1z"/></svg></span><div><p class="font-bold text-gray-800">Status Terpantau</p><p class="mt-0.5 text-sm text-gray-500">Proses lebih transparan</p></div></div>
         </div>
-    </div>
+    </section>
 
-    <div class="bg-gray-100 mt-16 py-12">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <h2 class="text-2xl font-bold text-gray-800">Tentang Layanan Ini</h2>
-            <p class="text-gray-600 mt-4 max-w-3xl mx-auto">SIPERMINDA (Sistem Informasi Permintaan Data Statistik) adalah platform online yang memudahkan masyarakat dan instansi dalam mengajukan permintaan data statistik di BPS Kabupaten Padang Lawas. Dengan sistem ini, Anda dapat melacak status permintaan secara transparan.</p>
+    <section class="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8" aria-labelledby="pengguna-title">
+        <div class="mx-auto max-w-2xl text-center"><p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">Layanan untuk semua</p><h2 id="pengguna-title" class="mt-2 text-2xl font-bold text-gray-800 md:text-3xl">Siapa yang dapat menggunakan?</h2><p class="mt-3 text-gray-500">SIPERMINDA mendukung kebutuhan data bagi berbagai pengguna.</p></div>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0110 15h4a4 4 0 014.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span><h3 class="mt-4 font-bold text-gray-800">Masyarakat</h3><p class="mt-2 text-sm leading-relaxed text-gray-500">Untuk kebutuhan informasi dan data statistik.</p></article>
+            <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-bpsGreen-100 text-bpsGreen-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm-5 2.8v2.7c0 .83 2.24 1.5 5 1.5s5-.67 5-1.5v-2.7"/></svg></span><h3 class="mt-4 font-bold text-gray-800">Mahasiswa &amp; Akademisi</h3><p class="mt-2 text-sm leading-relaxed text-gray-500">Untuk penelitian, tugas akhir, dan kajian.</p></article>
+            <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 10h.01M15 10h.01"/></svg></span><h3 class="mt-4 font-bold text-gray-800">Instansi Pemerintah</h3><p class="mt-2 text-sm leading-relaxed text-gray-500">Untuk perencanaan dan pelaksanaan program.</p></article>
+            <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-bpsOrange-50 text-bpsOrange-600"><svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M6 21V9h12v12M9 9V5h6v4M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg></span><h3 class="mt-4 font-bold text-gray-800">Perusahaan / Lembaga</h3><p class="mt-2 text-sm leading-relaxed text-gray-500">Untuk analisis dan kebutuhan kelembagaan.</p></article>
         </div>
-    </div>
+    </section>
+
+    <section class="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8" aria-labelledby="alur-title">
+        <div class="mx-auto max-w-2xl text-center"><p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">Alur layanan</p><h2 id="alur-title" class="mt-2 text-2xl font-bold text-gray-800 md:text-3xl">Empat tahap yang mudah diikuti</h2></div>
+        <ol class="relative mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-4"><div class="absolute left-[12.5%] right-[12.5%] top-5 hidden h-px bg-primary-200 lg:block" aria-hidden="true"></div>
+            <li class="relative text-center"><span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-primary-600 text-sm font-bold text-white shadow">1</span><h3 class="mt-4 font-bold text-gray-800">Ajukan</h3><p class="mx-auto mt-2 max-w-[15rem] text-sm leading-relaxed text-gray-500">Isi kebutuhan data melalui formulir permintaan.</p></li>
+            <li class="relative text-center"><span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-bpsGreen-600 text-sm font-bold text-white shadow">2</span><h3 class="mt-4 font-bold text-gray-800">Verifikasi</h3><p class="mx-auto mt-2 max-w-[15rem] text-sm leading-relaxed text-gray-500">Petugas memeriksa informasi permintaan Anda.</p></li>
+            <li class="relative text-center"><span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-primary-600 text-sm font-bold text-white shadow">3</span><h3 class="mt-4 font-bold text-gray-800">Proses</h3><p class="mx-auto mt-2 max-w-[15rem] text-sm leading-relaxed text-gray-500">Permintaan ditindaklanjuti sesuai kebutuhan data.</p></li>
+            <li class="relative text-center"><span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-bpsOrange-600 text-sm font-bold text-white shadow">4</span><h3 class="mt-4 font-bold text-gray-800">Data Siap</h3><p class="mx-auto mt-2 max-w-[15rem] text-sm leading-relaxed text-gray-500">Pantau status dan unduh hasil saat tersedia.</p></li>
+        </ol>
+    </section>
+
+    <section class="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8" aria-labelledby="persiapan-title">
+        <div class="grid overflow-hidden rounded-2xl border border-primary-100 bg-primary-50 md:grid-cols-[0.9fr_1.1fr]"><div class="bg-primary-600 px-6 py-8 text-white sm:px-8"><p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-100">Sebelum mengajukan</p><h2 id="persiapan-title" class="mt-3 text-2xl font-bold">Yang perlu disiapkan</h2><p class="mt-3 leading-relaxed text-primary-100">Siapkan informasi berikut agar permintaan Anda dapat diproses dengan lebih jelas.</p></div>
+            <ul class="space-y-4 px-6 py-8 sm:px-8"><li class="flex gap-3 text-gray-700"><span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-bpsGreen-500 text-white">✓</span><span>Nomor WhatsApp aktif</span></li><li class="flex gap-3 text-gray-700"><span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-bpsGreen-500 text-white">✓</span><span>Tujuan penggunaan data</span></li><li class="flex gap-3 text-gray-700"><span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-bpsGreen-500 text-white">✓</span><span>Detail data yang dibutuhkan</span></li></ul>
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8" aria-labelledby="keunggulan-title">
+        <div class="mx-auto max-w-2xl text-center"><p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">Keunggulan layanan</p><h2 id="keunggulan-title" class="mt-2 text-2xl font-bold text-gray-800 md:text-3xl">Kemudahan dalam setiap tahap</h2></div>
+        <div class="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="flex gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">✓</span><div><h3 class="font-bold text-gray-800">Pengajuan online</h3><p class="mt-1 text-sm leading-relaxed text-gray-500">Ajukan dari mana saja.</p></div></div>
+            <div class="flex gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bpsGreen-100 text-bpsGreen-600">✓</span><div><h3 class="font-bold text-gray-800">Status dapat dipantau</h3><p class="mt-1 text-sm leading-relaxed text-gray-500">Gunakan nomor tiket Anda.</p></div></div>
+            <div class="flex gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">✓</span><div><h3 class="font-bold text-gray-800">Notifikasi WhatsApp</h3><p class="mt-1 text-sm leading-relaxed text-gray-500">Pembaruan perkembangan.</p></div></div>
+            <div class="flex gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bpsOrange-50 text-bpsOrange-600">✓</span><div><h3 class="font-bold text-gray-800">Hasil dapat diunduh</h3><p class="mt-1 text-sm leading-relaxed text-gray-500">Saat data telah tersedia.</p></div></div>
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-4xl px-4 pt-16 sm:px-6 lg:px-8" aria-labelledby="faq-title">
+        <div class="text-center"><p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">Pertanyaan umum</p><h2 id="faq-title" class="mt-2 text-2xl font-bold text-gray-800 md:text-3xl">FAQ</h2></div>
+        <div class="mt-8 divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
+            <details class="group px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><span>Apakah layanan ini berbayar?</span><span class="text-primary-600 transition group-open:rotate-45" aria-hidden="true">+</span></summary><p class="mt-3 pr-8 text-sm leading-relaxed text-gray-600">Ketentuan layanan dan informasi yang diperlukan akan disampaikan melalui proses permintaan.</p></details>
+            <details class="group px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><span>Berapa lama proses permintaan?</span><span class="text-primary-600 transition group-open:rotate-45" aria-hidden="true">+</span></summary><p class="mt-3 pr-8 text-sm leading-relaxed text-gray-600">Target layanan adalah 1–2 hari kerja. Waktu proses dapat menyesuaikan kebutuhan dan ketersediaan data.</p></details>
+            <details class="group px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><span>Bagaimana jika data tidak tersedia?</span><span class="text-primary-600 transition group-open:rotate-45" aria-hidden="true">+</span></summary><p class="mt-3 pr-8 text-sm leading-relaxed text-gray-600">Petugas akan memberikan pembaruan terkait permintaan Anda melalui proses layanan.</p></details>
+            <details class="group px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><span>Apakah saya mendapat notifikasi WhatsApp?</span><span class="text-primary-600 transition group-open:rotate-45" aria-hidden="true">+</span></summary><p class="mt-3 pr-8 text-sm leading-relaxed text-gray-600">Pembaruan perkembangan dapat dikirimkan ke nomor WhatsApp aktif yang digunakan saat mengajukan permintaan.</p></details>
+            <details class="group px-5 py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><span>Bagaimana cara mengunduh hasil?</span><span class="text-primary-600 transition group-open:rotate-45" aria-hidden="true">+</span></summary><p class="mt-3 pr-8 text-sm leading-relaxed text-gray-600">Saat hasil tersedia, gunakan nomor tiket untuk memantau status dan mengikuti tautan unduhan yang tersedia.</p></details>
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-7xl px-4 pb-2 pt-16 sm:px-6 lg:px-8" aria-labelledby="cta-title"><div class="rounded-2xl bg-secondary-800 px-6 py-10 text-center text-white shadow-lg sm:px-10 sm:py-12"><h2 id="cta-title" class="text-2xl font-bold sm:text-3xl">Sudah mengetahui data yang Anda perlukan?</h2><p class="mx-auto mt-3 max-w-2xl text-primary-100">Ajukan permintaan sekarang dan pantau seluruh proses melalui satu nomor tiket.</p><a href="{{ $sudahMasuk ? route('permintaan.create') : route('pemohon.daftar') }}" class="mt-7 inline-flex min-h-12 items-center justify-center rounded-lg bg-white px-6 py-3 font-semibold text-primary-600 shadow hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-800 transition">Ajukan Permintaan</a></div></section>
 @endsection

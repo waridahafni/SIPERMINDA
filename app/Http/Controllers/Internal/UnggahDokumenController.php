@@ -25,7 +25,7 @@ class UnggahDokumenController extends Controller
         if ($data['tujuan'] === 'hasil-permintaan') {
             abort_unless($request->user()->can('lihat-permintaan') && $request->user()->can('upload-hasil'), 403);
             $permintaan = PermintaanData::findOrFail($target);
-            abort_unless($permintaan->status === 'disetujui_petugas', 409, 'Permintaan belum siap menerima file.');
+            abort_unless($permintaan->status === 'disetujui_kabid', 409, 'Permintaan belum siap menerima file.');
         } else {
             abort_unless($request->user()->can('upload-dataset'), 403);
             if ($data['tujuan'] === 'katalog-baru') {

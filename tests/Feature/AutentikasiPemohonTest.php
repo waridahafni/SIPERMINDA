@@ -65,6 +65,9 @@ class AutentikasiPemohonTest extends TestCase
             'email' => 'baru@example.com',
             'jenis_pemohon' => 'publik',
             'nama_instansi' => null,
+            'provinsi' => 'Sumatera Utara',
+            'kabupaten_kota' => 'Padang Lawas',
+            'alamat_lengkap' => 'Jl. Pengujian No. 1',
         ])->assertRedirect(route('otp.form'))
             ->assertSessionHas('otp_mode', 'daftar')
             ->assertSessionHas('otp_pemohon.no_hp', $nomorKanonis)
@@ -109,6 +112,9 @@ class AutentikasiPemohonTest extends TestCase
             'email' => 'form-baru@example.com',
             'jenis_pemohon' => 'instansi',
             'nama_instansi' => 'Instansi Form Baru',
+            'provinsi' => 'Sumatera Utara',
+            'kabupaten_kota' => 'Padang Lawas',
+            'alamat_lengkap' => 'Jl. Pengujian No. 1',
         ])->assertRedirect(route('otp.form'));
 
         $this->post(route('otp.verifikasi'), [
@@ -183,6 +189,9 @@ class AutentikasiPemohonTest extends TestCase
             'email' => 'login-baru@example.com',
             'jenis_pemohon' => 'instansi',
             'nama_instansi' => 'Instansi Baru',
+            'provinsi' => 'Sumatera Utara',
+            'kabupaten_kota' => 'Padang Lawas',
+            'alamat_lengkap' => 'Jl. Pengujian No. 1',
         ])->assertRedirect(route('permintaan.create'))
             ->assertSessionHas('pemohon_otp', $nomorKanonis)
             ->assertSessionMissing('pendaftaran_terverifikasi');
@@ -231,6 +240,9 @@ class AutentikasiPemohonTest extends TestCase
             'email' => 'kedaluwarsa@example.com',
             'jenis_pemohon' => 'publik',
             'nama_instansi' => null,
+            'provinsi' => 'Sumatera Utara',
+            'kabupaten_kota' => 'Padang Lawas',
+            'alamat_lengkap' => 'Jl. Pengujian No. 1',
         ])->assertRedirect(route('pemohon.daftar'))
             ->assertSessionMissing('pendaftaran_terverifikasi');
 

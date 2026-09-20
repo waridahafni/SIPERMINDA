@@ -20,6 +20,8 @@ BPS Padang Lawas belum memiliki server sendiri, namun berlangganan **shared host
 | Pemohon publik | Masyarakat umum yang ingin mengunduh/meminta data |
 | Pemohon instansi | Instansi pemerintah/lembaga lain yang meminta data |
 | Staf BPS | Petugas subject matter yang memproses permintaan & mengelola katalog data terbuka |
+| Kasi (Kepala Seksi) | Approval level 1 untuk permintaan data khusus |
+| Kabid (Kepala Bidang) | Approval level 2 (final) untuk permintaan data khusus |
 | Admin sistem | Mengelola user, role, dan konfigurasi sistem |
 
 ## 4. Alur Utama (User Flow)
@@ -36,7 +38,7 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 1. Pemohon mengisi form permintaan (verifikasi nomor HP via OTP)
 2. Pemohon mengisi detail: jenis data, tujuan penggunaan, periode data
 3. Sistem mencatat permintaan dengan nomor tiket
-4. **Persetujuan petugas**: Petugas memeriksa kelengkapan dan menyetujui atau menolak permintaan
+4. **Approval berjenjang**: Staf (verifikasi kelengkapan) → Kasi → Kabid
 5. Setelah disetujui, **petugas berwenang mengupload file hasil olahan data** secara manual ke portal (bukan proses otomatis dari database, karena belum ada integrasi data terintegrasi)
 6. Sistem mengirim **notifikasi email** ke pemohon bahwa data sudah siap
 7. Pemohon login/verifikasi lalu mengunduh file dari portal
@@ -44,7 +46,7 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 
 ### 4.3 Tracking Status
 - Pemohon dapat mengecek status permintaan menggunakan nomor tiket + nomor HP
-- Status: Diajukan → Disetujui Petugas → Data Siap Diunduh → Selesai / Ditolak
+- Status: Diajukan → Diverifikasi Staf → Disetujui Kasi → Disetujui Kabid → Data Siap Diunduh → Selesai / Ditolak
 
 ### 4.4 Akun Pemohon Publik (Tambahan 19 Agustus 2026)
 
@@ -60,7 +62,7 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 1. Pada tahap Staf, Kasi, atau Kabid, approver dapat memilih **Minta Info Tambahan** dan wajib menulis pertanyaan yang dapat dilihat pemohon.
 2. Status berubah menjadi **Menunggu Info Pemohon** dan seluruh aksi approval ditutup sementara sampai jawaban diterima.
 3. Pemohon pemilik tiket menjawab dari halaman detail **Permintaan Saya** setelah masuk; akun lain tidak dapat mengirim atau mengubah jawaban.
-4. Setelah dijawab, tiket kembali ke tahap Petugas yaitu `diajukan`.
+4. Setelah dijawab, tiket kembali ke tahap yang meminta informasi: Staf kembali ke `diajukan`, Kasi ke `diverifikasi_staf`, dan Kabid ke `disetujui_kasi`.
 5. Setiap putaran pertanyaan dan jawaban disimpan sebagai riwayat yang tidak menimpa approval sebelumnya.
 6. Catatan internal petugas disimpan terpisah dan tidak ditampilkan pada halaman atau email pemohon.
 7. Versi awal menerima jawaban teks. Lampiran pemohon ditunda sampai kebijakan tipe file, pemindaian malware, dan retensi dokumen ditetapkan.
@@ -78,7 +80,7 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 ### 5.2 Modul Permintaan Data Khusus
 - Form pengajuan dengan verifikasi OTP nomor HP
 - Nomor tiket otomatis
-- Persetujuan petugas dengan role & permission
+- Alur approval berjenjang (staf → kasi → kabid) dengan role & permission
 - Upload file hasil oleh petugas setelah disetujui
 - Riwayat/log setiap perubahan status (audit trail)
 
@@ -196,30 +198,10 @@ Upload data ke katalog data terbuka dilakukan langsung oleh staf/petugas subject
 - Jalur pendaftaran publik tetap tersedia dari halaman **Masuk Pemohon**. Route, form, verifikasi OTP, dan ketentuan bahwa akun petugas tidak dapat didaftarkan secara publik tidak berubah.
 - Keterangan kanal pada menu Masuk menggunakan istilah netral **kode OTP** agar tetap benar saat driver lokal, Fonnte demo, Meta rollback, atau SMS production digunakan.
 
-### Upload dokumen untuk Vercel (13 September 2026)
+### 9.7 Notifikasi Perkembangan WhatsApp (20 September 2026)
 
-- Upload S3 sampai 50 MB memakai POST policy privat, token sekali pakai yang terikat petugas/aksi/record, serta pemeriksaan ukuran/MIME sebelum finalisasi. Alur lokal dipertahankan.
-- Unduhan S3 memakai URL sementara setelah otorisasi. Setup bucket/CORS/lifecycle dijelaskan singkat pada docs/UPLOAD_S3.md; pengujian bucket dan Vercel nyata tetap diperlukan sebelum rilis.
-
-### Cloudflare R2 untuk dokumen (14 September 2026)
-
-- Target object storage berubah menjadi Cloudflare R2 melalui API kompatibel S3, region auto dan endpoint akun R2. Presigned PUT 5 menit menggantikan POST policy; header ACL tidak dikirim.
-- Token finalisasi 15 menit, otorisasi, batas final 50 MB, pemeriksaan MIME/ukuran, staging, copy bersyarat ETag, serta signed download tetap dipertahankan. Alur upload lokal tidak berubah.
-- CORS bucket menggunakan PUT dengan origin aplikasi yang tepat. PUT tidak membatasi ukuran melalui policy; object staging yang melampaui batas ditolak sebelum finalisasi dan dibersihkan lifecycle bucket.
-
-### Target Preview Supabase dan Neon (14 September 2026)
-
-- Menggantikan target R2 untuk Preview: pengguna sudah menyiapkan bucket Supabase Storage dan Neon Preview. Presigned PUT tetap memakai driver S3, endpoint Supabase lengkap, region project, dan path-style; otorisasi, validasi finalisasi, serta alur lokal dipertahankan.
-- Pengguna mengonfirmasi pesan contoh dari dashboard Meta WhatsApp berhasil. Keberhasilan OTP dari aplikasi, webhook, dan log pada database Preview masih perlu diverifikasi secara terpisah.
-- Credential diisi privat pada `.env.preview` yang diabaikan Git. Koneksi layanan nyata, copy/finalisasi Supabase, dan pembersihan staging belum dinyatakan lulus. Migration, push, dan deploy menunggu persetujuan pengguna.
-
-### Identitas Visual BPS Kabupaten Padang Lawas (16 September 2026)
-
-- Navigasi publik dan internal menggunakan palet biru BPS, dengan aksen biru terang, hijau, dan oranye seperlunya. Logo BPS ditampilkan sebagai aset SVG lokal agar tetap tersedia saat deployment.
-
-### Penguatan Layanan Permintaan Data (16 September 2026)
-
-- Status pemohon menampilkan timeline dari pengajuan, klarifikasi, approval, data siap, hingga selesai. Catatan internal tidak ditampilkan pada halaman status publik.
-- Dashboard petugas menandai permintaan aktif yang melewati target configurable satu atau dua hari kerja. Laporan mendukung filter status, kategori, rentang tanggal, dan ekspor CSV.
-- Notifikasi status WhatsApp memakai template Meta terpisah dengan dua parameter body: nomor tiket dan status layanan. Pengiriman bersifat best-effort sehingga kegagalan provider tidak membatalkan perubahan status.
-- Kebijakan Privasi dan Ketentuan Layanan tersedia dari footer publik.
+- Meta WhatsApp Cloud API dipakai untuk notifikasi perkembangan permintaan selain OTP, dengan template `UTILITY` terpisah yang telah disetujui Meta.
+- Pemohon menerima pembaruan saat tiket diterima, tahap verifikasi/approval berubah, informasi tambahan diminta, data siap, ditandai selesai, atau ditolak.
+- Petugas menerima pembaruan saat ada pengajuan baru, jawaban informasi tambahan, unduhan hasil, atau feedback. Nomor penerima petugas disimpan sebagai daftar environment production (`WHATSAPP_INTERNAL_RECIPIENTS`) agar nomor pribadi tidak masuk basis data atau Git.
+- Isi template hanya memuat nomor tiket dan label peristiwa; jawaban klarifikasi, catatan internal, file, dan data pribadi tidak dikirim melalui WhatsApp.
+- Pengiriman bersifat best-effort dan tidak boleh membatalkan transaksi bisnis. Status delivery dicatat melalui webhook Meta yang sudah ada.

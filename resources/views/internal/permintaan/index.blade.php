@@ -15,7 +15,9 @@
             <div class="flex flex-wrap gap-2 text-sm">
                 <a href="{{ route('internal.permintaan.index') }}" @click="tab = 'semua'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'semua' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Semua</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'diajukan']) }}" @click="tab = 'diajukan'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'diajukan' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Diajukan</a>
-                <a href="{{ route('internal.permintaan.index', ['status' => 'disetujui_petugas']) }}" @click="tab = 'disetujui_petugas'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'disetujui_petugas' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Disetujui Petugas</a>
+                <a href="{{ route('internal.permintaan.index', ['status' => 'diverifikasi_staf']) }}" @click="tab = 'diverifikasi_staf'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'diverifikasi_staf' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Diverifikasi</a>
+                <a href="{{ route('internal.permintaan.index', ['status' => 'disetujui_kasi']) }}" @click="tab = 'disetujui_kasi'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'disetujui_kasi' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Disetujui Kasi</a>
+                <a href="{{ route('internal.permintaan.index', ['status' => 'disetujui_kabid']) }}" @click="tab = 'disetujui_kabid'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'disetujui_kabid' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Disetujui Kabid</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'menunggu_info_pemohon']) }}" @click="tab = 'menunggu_info_pemohon'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'menunggu_info_pemohon' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Menunggu Info</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'data_siap']) }}" @click="tab = 'data_siap'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'data_siap' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Data Siap</a>
                 <a href="{{ route('internal.permintaan.index', ['status' => 'ditolak']) }}" @click="tab = 'ditolak'" class="px-3 py-1.5 rounded-lg font-medium transition" :class="tab === 'ditolak' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">Ditolak</a>
@@ -44,7 +46,9 @@
                                 @php
                                     $badge = match($p->status) {
                                         'diajukan' => 'yellow',
-                                        'disetujui_petugas' => 'blue',
+                                        'diverifikasi_staf' => 'blue',
+                                        'disetujui_kasi' => 'indigo',
+                                        'disetujui_kabid' => 'purple',
                                         'menunggu_info_pemohon' => 'amber',
                                         'ditolak' => 'red',
                                         'data_siap' => 'green',
