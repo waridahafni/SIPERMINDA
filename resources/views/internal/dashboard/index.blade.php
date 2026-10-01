@@ -3,6 +3,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
+    @include('internal.dashboard.pemantauan')
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-sm border p-6">
             <div class="flex items-center gap-4">

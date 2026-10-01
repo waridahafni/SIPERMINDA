@@ -40,14 +40,13 @@
                 </h2>
 
                 <p class="mt-2 text-sm leading-relaxed text-gray-500">
-                    Masukkan nomor WhatsApp yang terdaftar.
-                    Kami akan mengirimkan kode OTP untuk memverifikasi akun Anda.
+                    Masukkan nomor WhatsApp dan password Anda. Tidak perlu meminta OTP untuk login berikutnya.
                 </p>
 
 
                 <form
                     method="POST"
-                    action="{{ route('pemohon.masuk.kirim-otp') }}"
+                    action="{{ route('pemohon.masuk.password') }}"
                     class="mt-8 space-y-5"
 
                     x-data="{
@@ -100,7 +99,7 @@
 
 
                         <p class="mt-1.5 text-xs text-gray-500">
-                            Pastikan nomor WhatsApp masih aktif dan dapat menerima pesan.
+                            Gunakan nomor WhatsApp yang sudah Anda daftarkan.
                         </p>
 
 
@@ -116,6 +115,11 @@
                     </div>
 
 
+                    <div>
+                        <label for="password" class="mb-1 block text-sm font-medium text-gray-700">Password</label>
+                        <input id="password" type="password" name="password" required maxlength="72" autocomplete="current-password" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-primary-500">
+                        @error('password') <p class="mt-1 text-sm text-red-600" role="alert">{{ $message }}</p> @enderror
+                    </div>
                     <button
                         type="submit"
                         :disabled="submitting"
@@ -131,19 +135,21 @@
                     >
 
                         <span x-show="!submitting">
-                            Kirim Kode OTP
+                            Masuk
                         </span>
 
                         <span
                             x-show="submitting"
                             x-cloak
                         >
-                            Mengirim OTP...
+                            Memeriksa akun...
                         </span>
 
                     </button>
 
                 </form>
+
+                <p class="mt-4 text-center text-sm"><a href="{{ route('pemohon.pemulihan') }}" class="font-semibold text-primary-600 underline">Lupa password / Akun lama belum punya password</a></p>
 
 
                 <p class="mt-6 text-center text-sm text-gray-500">

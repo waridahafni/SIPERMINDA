@@ -11,6 +11,11 @@
     </div>
 
     <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6">
+        <section class="mb-6 rounded-xl border bg-white p-5">
+            <h2 class="font-semibold">Password Akun</h2>
+            <p class="mt-2 text-sm text-gray-600">{{ $pemohon->password ? 'Anda dapat login menggunakan nomor HP dan password.' : 'Buat password agar login berikutnya tidak perlu meminta OTP.' }}</p>
+            <a href="{{ route('pemohon.pemulihan') }}" class="mt-3 inline-block text-sm font-semibold text-primary-700 underline">{{ $pemohon->password ? 'Ganti password dengan verifikasi OTP' : 'Buat password dengan verifikasi OTP' }}</a>
+        </section>
         <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" aria-labelledby="data-profil">
             <div class="flex items-center gap-4 border-b border-gray-100 bg-gray-50 px-6 py-5">
                 <span class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-lg font-bold text-white">{{ mb_strtoupper(mb_substr($pemohon->nama, 0, 1)) }}</span>

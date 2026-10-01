@@ -128,6 +128,7 @@
                     </div>
 
                     @include('public.auth._profil')
+                    <p class="text-sm text-gray-600">Setelah nomor diverifikasi dengan OTP, Anda akan membuat password. Login berikutnya cukup memakai nomor HP dan password.</p>
 
                     {{-- Info OTP --}}
                     <div class="rounded-xl border border-blue-100 bg-blue-50/60 p-4">

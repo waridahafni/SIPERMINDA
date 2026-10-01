@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,30 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PermintaanData extends Model
 {
+    public const STATUS_AKTIF = ['diajukan', 'diverifikasi_staf', 'disetujui_kasi', 'disetujui_kabid', 'menunggu_info_pemohon'];
+
+    public function batasLayanan(): Carbon
+    {
+        $batas = $this->created_at->copy();
+        $sisaHari = (int) config('layanan.sla_hari_kerja', 2);
+
+        while ($sisaHari > 0) {
+            $batas->addDay();
+            $liburNasional = config('hari_libur.'.$batas->year, []);
+
+            if ($batas->isWeekday() && ! in_array($batas->toDateString(), $liburNasional, true)) {
+                $sisaHari--;
+            }
+        }
+
+        return $batas;
+    }
+
+    public function kendala(): HasMany
+    {
+        return $this->hasMany(PermintaanKendala::class)->latest('id');
+    }
+
     protected $table = 'permintaan_data';
 
     protected $guarded = ['id'];

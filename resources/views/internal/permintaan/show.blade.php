@@ -158,6 +158,7 @@
         </div>
 
         <div class="space-y-6">
+            @include('internal.permintaan.pemantauan')
             <div class="bg-white rounded-xl shadow-sm border p-6">
                 <h2 class="font-semibold text-gray-800 mb-4">Informasi Pemohon</h2>
                 <div class="text-sm space-y-2">

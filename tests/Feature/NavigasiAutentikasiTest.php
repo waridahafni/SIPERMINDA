@@ -17,7 +17,7 @@ class NavigasiAutentikasiTest extends TestCase
             ->assertSee('<details', false)
             ->assertSee('Masuk sebagai Pemohon')
             ->assertSee('Masuk sebagai Petugas')
-            ->assertSee('kode OTP')
+            ->assertSee('nomor HP dan password')
             ->assertSee(route('pemohon.masuk'), false)
             ->assertSee(route('internal.login'), false);
 

@@ -11,10 +11,14 @@ class Pemohon extends Model
 
     protected $guarded = ['id'];
 
+    protected $hidden = ['password', 'auth_version'];
+
     protected function casts(): array
     {
         return [
             'no_hp_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'auth_version' => 'integer',
         ];
     }
 

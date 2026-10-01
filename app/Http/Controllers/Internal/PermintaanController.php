@@ -59,7 +59,11 @@ class PermintaanController extends Controller
             'approvalLog.approver',
             'klarifikasi.peminta',
             'uploader',
+            'feedback',
+            'kendala',
         ]);
+        $permintaan->loadCount('unduhanLog');
+        $permintaan->loadMax('unduhanLog', 'downloaded_at');
 
         return view('internal.permintaan.show', compact('permintaan'));
     }

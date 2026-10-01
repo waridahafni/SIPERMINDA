@@ -61,7 +61,7 @@ class WhatsAppGatewayTest extends TestCase
         $this->assertStringNotContainsString($kode, $log->toJson());
         $this->get('/otp')->assertDontSee($kode);
 
-        $this->post('/otp/verifikasi', ['kode_otp' => $kode])->assertRedirect('/permintaan/create');
+        $this->post('/otp/verifikasi', ['kode_otp' => $kode])->assertRedirect(route('pemohon.password'));
         $this->assertDatabaseCount('pemohon', 1);
         $this->assertNotNull($otp->fresh()->verified_at);
         $this->post('/otp/verifikasi', ['kode_otp' => $kode])->assertRedirect('/masuk');

@@ -56,7 +56,7 @@
                 [
                     'nomor' => '1',
                     'judul' => 'Daftar atau Masuk',
-                    'deskripsi' => 'Daftar sebagai pemohon baru atau masuk dengan nomor HP yang sudah terdaftar. Kode OTP dikirim ke nomor tersebut untuk mengonfirmasi identitas.',
+                    'deskripsi' => 'Daftar dan verifikasi nomor HP dengan OTP, lalu buat password. Login berikutnya cukup menggunakan nomor HP dan password. OTP diperlukan kembali jika Anda lupa password.',
                     'warna' => 'bg-primary-500',
                     'lingkaran' => 'ring-primary-200',
                     'ikon' => 'M12 11c0 3.517-1.009 6.799-2.753 8.571m2.753-8.571a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zm6 0c0 3.517-1.009 6.799-2.753 8.571m2.753-8.571a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z',

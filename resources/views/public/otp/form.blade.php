@@ -30,7 +30,7 @@
             <h1 class="text-2xl font-bold text-gray-800 text-center">Verifikasi Kode OTP</h1>
             <p class="text-gray-500 text-center mt-2">
                 Verifikasi melalui {{ $kanalOtp }} untuk nomor <strong>{{ $nomorTersamar }}</strong>
-                untuk {{ $modeOtp === 'masuk' ? 'masuk' : 'menyelesaikan pendaftaran' }}.
+                untuk {{ $modeOtp === 'masuk' ? 'membuat atau memulihkan password' : 'menyelesaikan pendaftaran dan membuat password' }}.
             </p>
 
             <form method="POST" action="{{ route('otp.verifikasi') }}" class="mt-6 space-y-4"

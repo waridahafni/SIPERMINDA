@@ -78,7 +78,7 @@ class AutentikasiPemohonTest extends TestCase
 
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk($nomorKanonis),
-        ])->assertRedirect(route('permintaan.create'))
+        ])->assertRedirect(route('pemohon.password'))
             ->assertSessionHas('pemohon_otp', $nomorKanonis)
             ->assertSessionMissing([
                 'otp_pemohon',
@@ -95,6 +95,10 @@ class AutentikasiPemohonTest extends TestCase
         $this->assertNotNull($pemohon->no_hp_verified_at);
         $this->assertSame($pemohon->id, session('pemohon_id'));
         $this->assertNotNull(OtpVerification::firstOrFail()->verified_at);
+        $this->post(route('pemohon.password.simpan'), [
+            'password' => 'PasswordBaru123', 'password_confirmation' => 'PasswordBaru123',
+        ])->assertRedirect(route('permintaan.create'));
+        $this->assertTrue(Hash::check('PasswordBaru123', $pemohon->fresh()->password));
     }
 
     public function test_daftar_dengan_nomor_existing_memakai_akun_dan_riwayat_yang_sama(): void
@@ -119,7 +123,7 @@ class AutentikasiPemohonTest extends TestCase
 
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk('6281234567802'),
-        ])->assertRedirect(route('permintaan.create'))
+        ])->assertRedirect(route('pemohon.password'))
             ->assertSessionHas('pemohon_id', $pemohon->id)
             ->assertSessionHas('success', fn (string $pesan): bool => str_contains($pesan, 'sudah terdaftar'));
 
@@ -149,7 +153,7 @@ class AutentikasiPemohonTest extends TestCase
 
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk('6281234567803'),
-        ])->assertRedirect(route('pemohon.permintaan.index'))
+        ])->assertRedirect(route('pemohon.password'))
             ->assertSessionHas('pemohon_id', $pemohon->id)
             ->assertSessionHas('pemohon_nama', 'Pemohon Existing')
             ->assertSessionMissing(['otp_pemohon', 'otp_mode', 'otp_verification_id']);
@@ -192,7 +196,7 @@ class AutentikasiPemohonTest extends TestCase
             'provinsi' => 'Sumatera Utara',
             'kabupaten_kota' => 'Padang Lawas',
             'alamat_lengkap' => 'Jl. Pengujian No. 1',
-        ])->assertRedirect(route('permintaan.create'))
+        ])->assertRedirect(route('pemohon.password'))
             ->assertSessionHas('pemohon_otp', $nomorKanonis)
             ->assertSessionMissing('pendaftaran_terverifikasi');
 
@@ -301,6 +305,9 @@ class AutentikasiPemohonTest extends TestCase
 
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk($pemohon->no_hp),
+        ])->assertRedirect(route('pemohon.password'));
+        $this->post(route('pemohon.password.simpan'), [
+            'password' => 'PasswordBaru123', 'password_confirmation' => 'PasswordBaru123',
         ])->assertRedirect(url($tujuan))
             ->assertSessionHas('pemohon_id', $pemohon->id)
             ->assertSessionMissing('url.intended');
@@ -318,6 +325,9 @@ class AutentikasiPemohonTest extends TestCase
 
             $this->post(route('otp.verifikasi'), [
                 'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk($pemohon->no_hp),
+            ])->assertRedirect(route('pemohon.password'));
+            $this->post(route('pemohon.password.simpan'), [
+                'password' => 'PasswordBaru123', 'password_confirmation' => 'PasswordBaru123',
             ])->assertRedirect(route('pemohon.permintaan.index'))
                 ->assertSessionMissing('url.intended');
 
@@ -359,7 +369,7 @@ class AutentikasiPemohonTest extends TestCase
 
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $kodeKedua,
-        ])->assertRedirect(route('pemohon.permintaan.index'))
+        ])->assertRedirect(route('pemohon.password'))
             ->assertSessionHas('pemohon_id', $pemohon->id);
     }
 
@@ -389,6 +399,9 @@ class AutentikasiPemohonTest extends TestCase
         ]);
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk($pemohon->no_hp),
+        ])->assertRedirect(route('pemohon.password'));
+        $this->post(route('pemohon.password.simpan'), [
+            'password' => 'PasswordBaru123', 'password_confirmation' => 'PasswordBaru123',
         ])->assertRedirect(route('permintaan.unduh', $permintaan));
 
         $this->get(route('permintaan.unduh', $permintaan))->assertDownload();
@@ -412,7 +425,7 @@ class AutentikasiPemohonTest extends TestCase
 
         $this->post(route('otp.verifikasi'), [
             'kode_otp' => $this->pengirimOtp->kodeTerakhirUntuk($pemohon->no_hp),
-        ])->assertRedirect(route('pemohon.permintaan.index'));
+        ])->assertRedirect(route('pemohon.password'));
 
         $this->assertDatabaseCount('permintaan_data', 0);
     }

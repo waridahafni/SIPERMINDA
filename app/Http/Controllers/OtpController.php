@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use InvalidArgumentException;
@@ -58,6 +59,91 @@ class OtpController extends Controller
         }
 
         return view('public.auth.masuk');
+    }
+
+    public function showPemulihan()
+    {
+        return view('public.auth.pemulihan');
+    }
+
+    public function masukPassword(MasukPemohonRequest $request)
+    {
+        $request->validate(['password' => ['required', 'string', 'max:72']]);
+        $noHp = NomorTeleponIndonesia::kanonis($request->validated('no_hp'));
+        $key = 'pemohon-password:'.NomorTeleponIndonesia::kunciRateLimit($noHp);
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return back()->withInput($request->only('no_hp'))->withErrors(['no_hp' => 'Terlalu banyak percobaan. Coba kembali dalam '.RateLimiter::availableIn($key).' detik.']);
+        }
+        RateLimiter::hit($key, 300);
+        $cocok = Pemohon::whereIn('no_hp', NomorTeleponIndonesia::varianPenyimpanan($noHp))->get();
+        $pemohon = $cocok->count() === 1 ? $cocok->first() : null;
+        $hash = $pemohon?->password ?? Hash::make('pembanding-login-tanpa-akun');
+        $valid = Hash::check($request->input('password'), $hash);
+        if (! $valid || ! $pemohon?->password || ! $pemohon->no_hp_verified_at) {
+            return back()->withInput($request->only('no_hp'))->withErrors(['no_hp' => 'Nomor HP atau password tidak sesuai. Jika belum punya password, gunakan pemulihan akun.']);
+        }
+        RateLimiter::clear($key);
+        if (Hash::needsRehash($pemohon->password)) {
+            Pemohon::whereKey($pemohon->id)->where('password', $pemohon->password)
+                ->where('auth_version', $pemohon->auth_version)
+                ->update(['password' => Hash::make($request->input('password'))]);
+        }
+        $this->aktifkanSesiPemohon($request, $pemohon);
+
+        return $this->alihkanSetelahAutentikasi($request, route('pemohon.permintaan.index'));
+    }
+
+    private function izinPassword(Request $request): ?array
+    {
+        $izin = $request->session()->get('izin_password');
+        $pemohon = $this->pemohonTerverifikasiDariSesi($request);
+        if (! is_array($izin) || ! $pemohon
+            || ($izin['pemohon_id'] ?? null) !== $pemohon->id
+            || ($izin['auth_version'] ?? null) !== $pemohon->auth_version
+            || ($izin['expires_at'] ?? 0) <= now()->timestamp) {
+            $request->session()->forget('izin_password');
+
+            return null;
+        }
+
+        return $izin;
+    }
+
+    public function showPassword(Request $request)
+    {
+        if (! $this->izinPassword($request)) {
+            return redirect()->route('pemohon.pemulihan')->with('error', 'Verifikasi nomor terlebih dahulu untuk membuat atau mengganti password.');
+        }
+
+        return view('public.auth.password');
+    }
+
+    public function simpanPassword(Request $request)
+    {
+        $izin = $this->izinPassword($request);
+        if (! $izin) {
+            return redirect()->route('pemohon.pemulihan')->with('error', 'Verifikasi sudah berakhir. Silakan verifikasi nomor kembali.');
+        }
+        $data = $request->validate(['password' => ['required', 'string', 'min:8', 'max:72', 'confirmed', function ($attribute, $value, $fail) {
+            if (strlen($value) > 72) {
+                $fail('Password terlalu panjang. Gunakan maksimal 72 byte.');
+            }
+        }]]);
+        $pemohon = DB::transaction(function () use ($izin, $data) {
+            $pemohon = Pemohon::whereKey($izin['pemohon_id'])->lockForUpdate()->firstOrFail();
+            abort_unless($pemohon->auth_version === $izin['auth_version'], 403);
+            $pemohon->password = $data['password'];
+            $pemohon->auth_version++;
+            $pemohon->save();
+            OtpVerification::whereIn('no_hp', NomorTeleponIndonesia::varianPenyimpanan($pemohon->no_hp))
+                ->whereNull('verified_at')->update(['expired_at' => now()]);
+
+            return $pemohon;
+        });
+        $this->aktifkanSesiPemohon($request, $pemohon);
+
+        return $this->alihkanSetelahAutentikasi($request, $izin['tujuan'] ?? route('pemohon.permintaan.index'))
+            ->with('success', 'Password berhasil disimpan. Selanjutnya masuk cukup dengan nomor HP dan password.');
     }
 
     /**
@@ -133,7 +219,7 @@ class OtpController extends Controller
     }
 
     /**
-     * Memulai login pemohon hanya dengan nomor HP.
+     * Memverifikasi nomor untuk pembuatan atau pemulihan password.
      * Keberadaan akun baru diperiksa setelah OTP berhasil diverifikasi agar
      * endpoint ini tidak dapat dipakai untuk enumerasi akun.
      */
@@ -259,6 +345,7 @@ class OtpController extends Controller
         $pemohon = $hasil['pemohon'];
         $this->aktifkanSesiPemohon($request, $pemohon);
 
+        $this->berikanIzinPassword($request, $pemohon);
         $tujuanDefault = $modeOtp === self::MODE_MASUK
             ? route('pemohon.permintaan.index')
             : route('permintaan.create');
@@ -519,6 +606,8 @@ class OtpController extends Controller
 
         $this->aktifkanSesiPemohon($request, $pemohon);
 
+        $this->berikanIzinPassword($request, $pemohon);
+
         return $this->alihkanSetelahAutentikasi($request, route('permintaan.create'))
             ->with('success', 'Pendaftaran berhasil. Anda sudah masuk sebagai pemohon.');
     }
@@ -528,6 +617,8 @@ class OtpController extends Controller
         $request->session()->forget([
             'pemohon_otp',
             'pemohon_id',
+            'pemohon_auth_version',
+            'izin_password',
             'pemohon_nama',
             'otp_nomor',
             'otp_pemohon',
@@ -551,6 +642,7 @@ class OtpController extends Controller
         // Rotasi ID session untuk mencegah session fixation setelah autentikasi.
         $request->session()->regenerate(true);
         $request->session()->forget([
+            'izin_password',
             'otp_pemohon',
             'otp_mode',
             'otp_verification_id',
@@ -561,8 +653,18 @@ class OtpController extends Controller
         $request->session()->put([
             'pemohon_otp' => $pemohon->no_hp,
             'pemohon_id' => $pemohon->id,
+            'pemohon_auth_version' => $pemohon->auth_version ?? 0,
             'pemohon_nama' => $pemohon->nama,
             'otp_nomor' => $pemohon->no_hp,
+        ]);
+    }
+
+    private function berikanIzinPassword(Request $request, Pemohon $pemohon): void
+    {
+        $request->session()->put('izin_password', [
+            'pemohon_id' => $pemohon->id,
+            'auth_version' => $pemohon->auth_version ?? 0,
+            'expires_at' => now()->addMinutes(10)->timestamp,
         ]);
     }
 
@@ -592,8 +694,10 @@ class OtpController extends Controller
             ->whereNotNull('no_hp_verified_at')
             ->first();
 
-        if (! $pemohon) {
+        if (! $pemohon || (int) $request->session()->get('pemohon_auth_version', 0) !== $pemohon->auth_version) {
             $this->bersihkanSesiPemohon($request);
+
+            return null;
         }
 
         return $pemohon;
@@ -602,6 +706,8 @@ class OtpController extends Controller
     private function bersihkanSesiPemohon(Request $request): void
     {
         $request->session()->forget([
+            'pemohon_auth_version',
+            'izin_password',
             'pemohon_id',
             'pemohon_otp',
             'pemohon_nama',
@@ -614,6 +720,11 @@ class OtpController extends Controller
         Request $request,
         string $tujuanDefault,
     ): RedirectResponse {
+        if ($request->session()->has('izin_password')) {
+            $request->session()->put('izin_password.tujuan', $tujuanDefault);
+
+            return redirect()->route('pemohon.password');
+        }
         $tujuan = $request->session()->pull('url.intended');
 
         if (! $this->uriLokalAman($tujuan)) {

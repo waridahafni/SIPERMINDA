@@ -220,11 +220,13 @@
         @if(in_array($permintaan->status, ['data_siap', 'selesai']) && $permintaan->file_hasil_path)
             <div class="mt-8 text-center">
                 @if($akunPemilikAktif)
+                    @include('public.status.survei')
                     <p class="text-sm text-gray-600 mb-3">File hasil tersedia untuk akun pemohon Anda.</p>
                     <a href="{{ route('permintaan.unduh', $permintaan) }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 transition shadow">
                         <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Unduh Data
                     </a>
+                    @include('public.status.kendala')
                 @elseif($pemohonAktifId === null)
                     <p class="text-sm text-gray-600 mb-3">Data sudah siap. Masuk dengan akun pemohon yang mengajukan permintaan ini untuk mengunduhnya.</p>
                     {{-- Tautan protected membuat middleware menyimpan URL unduhan sebagai tujuan setelah login. --}}

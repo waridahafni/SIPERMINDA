@@ -29,6 +29,10 @@ Route::post('/cek-status', [PublicController::class, 'cekStatusPost'])->middlewa
 Route::get('/daftar', [OtpController::class, 'showDaftar'])->name('pemohon.daftar');
 Route::post('/daftar/kirim-otp', [OtpController::class, 'kirimOtp'])->middleware('throttle:10,1')->name('pemohon.daftar.kirim-otp');
 Route::get('/masuk', [OtpController::class, 'showMasuk'])->name('pemohon.masuk');
+Route::post('/masuk', [OtpController::class, 'masukPassword'])->middleware('throttle:10,1')->name('pemohon.masuk.password');
+Route::get('/pemulihan-akun', [OtpController::class, 'showPemulihan'])->name('pemohon.pemulihan');
+Route::get('/buat-password', [OtpController::class, 'showPassword'])->name('pemohon.password');
+Route::post('/buat-password', [OtpController::class, 'simpanPassword'])->middleware('throttle:10,1')->block(15, 5)->name('pemohon.password.simpan');
 Route::post('/masuk/kirim-otp', [OtpController::class, 'kirimOtpMasuk'])->middleware('throttle:10,1')->name('pemohon.masuk.kirim-otp');
 Route::get('/daftar/lengkapi', [OtpController::class, 'showLengkapiPendaftaran'])->name('pemohon.daftar.lengkapi');
 Route::post('/daftar/lengkapi', [OtpController::class, 'lengkapiPendaftaran'])->middleware('throttle:10,1')->name('pemohon.daftar.lengkapi.simpan');
@@ -39,7 +43,7 @@ Route::post('/otp/kirim', [OtpController::class, 'kirimOtp'])->middleware('throt
 Route::post('/otp/kirim-ulang', [OtpController::class, 'kirimUlang'])->middleware('throttle:10,1')->name('otp.kirim-ulang');
 Route::post('/otp/verifikasi', [OtpController::class, 'verifikasiOtp'])->middleware('throttle:20,1')->name('otp.verifikasi');
 
-// Permintaan Data (butuh OTP)
+// Akun dan permintaan data (butuh sesi pemohon terverifikasi).
 Route::middleware(['pemohon.otp'])->group(function () {
     Route::get('/akun', [AkunPemohonController::class, 'dashboard'])->name('pemohon.dashboard');
     Route::get('/akun/profil', [AkunPemohonController::class, 'profil'])->name('pemohon.profil');
@@ -61,6 +65,7 @@ Route::middleware(['pemohon.otp'])->group(function () {
     Route::get('/permintaan/{permintaan}/selesai', [PermintaanController::class, 'selesai'])->name('permintaan.selesai');
     Route::get('/permintaan/{permintaan}/unduh', [PermintaanController::class, 'unduhHasil'])->name('permintaan.unduh');
     Route::post('/permintaan/{permintaan}/feedback', [PermintaanController::class, 'simpanFeedback'])->name('permintaan.feedback');
+    Route::post('/permintaan/{permintaan}/kendala', [\App\Http\Controllers\KendalaController::class, 'store'])->middleware('throttle:10,1')->name('permintaan.kendala');
 });
 
 // Status tracking (tanpa OTP, verifikasi tiket + no HP)
@@ -83,6 +88,9 @@ Route::prefix('internal')->middleware(['auth'])->name('internal.')->group(functi
 
     // Permintaan
     Route::middleware('permission:lihat-permintaan')->group(function () {
+        Route::get('/survei', [\App\Http\Controllers\Internal\SurveiController::class, 'index'])->name('survei.index');
+        Route::get('/survei/export', [\App\Http\Controllers\Internal\SurveiController::class, 'export'])->name('survei.export');
+        Route::post('/permintaan/{permintaan}/kendala/{kendala}/selesai', [\App\Http\Controllers\KendalaController::class, 'selesai'])->middleware('permission:upload-hasil')->name('permintaan.kendala.selesai');
         Route::get('/permintaan', [InternalPermintaanController::class, 'index'])->name('permintaan.index');
         Route::get('/permintaan/{permintaan}', [InternalPermintaanController::class, 'show'])->name('permintaan.show');
         Route::post('/permintaan/{permintaan}/keputusan', [InternalPermintaanController::class, 'keputusan'])->name('permintaan.keputusan');

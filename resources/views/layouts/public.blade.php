@@ -81,7 +81,7 @@
                                 <a x-ref="loginPemohon" href="{{ route('pemohon.masuk') }}"
                                     class="block px-4 py-3 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500">
                                     <span class="block font-semibold text-primary-700">Masuk sebagai Pemohon</span>
-                                    <span class="block mt-0.5 text-xs font-normal text-gray-600">Untuk masyarakat atau instansi, menggunakan kode OTP.</span>
+                                    <span class="block mt-0.5 text-xs font-normal text-gray-600">Untuk masyarakat atau instansi, menggunakan nomor HP dan password.</span>
                                 </a>
                                 <a href="{{ route('internal.login') }}"
                                     class="block border-t border-gray-100 px-4 py-3 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500">
@@ -124,7 +124,7 @@
                     <div class="grid sm:grid-cols-2 gap-2 mt-2">
                         <a href="{{ route('pemohon.masuk') }}" class="block rounded-lg border border-white/50 px-3 py-2.5 hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                             <span class="block font-semibold">Sebagai Pemohon</span>
-                            <span class="block mt-0.5 text-xs font-normal text-primary-100">Masyarakat/instansi via kode OTP</span>
+                            <span class="block mt-0.5 text-xs font-normal text-primary-100">Masyarakat/instansi via nomor HP dan password</span>
                         </a>
                         <a href="{{ route('internal.login') }}" class="block rounded-lg border border-white/50 px-3 py-2.5 hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                             <span class="block font-semibold">Sebagai Petugas</span>

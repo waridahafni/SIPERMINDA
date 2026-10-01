@@ -255,6 +255,49 @@ class AlurPermintaanTest extends TestCase
         $this->assertDatabaseHas('permintaan_data', ['id' => $permintaan->id, 'status' => 'selesai']);
     }
 
+    public function test_survei_muncul_saat_dokumen_tersedia_dan_dapat_disimpan(): void
+    {
+        $pemohon = $this->registerPemohon();
+        $permintaan = PermintaanData::create([
+            'nomor_tiket' => 'BPS/PD/2025/00008',
+            'pemohon_id' => $pemohon->id,
+            'jenis_data' => 'Data Sosial',
+            'tujuan_penggunaan' => 'Riset',
+            'periode_data' => '2024',
+            'status' => 'diajukan',
+        ]);
+
+        $this->withSession([
+            'pemohon_otp' => $pemohon->no_hp,
+            'pemohon_id' => $pemohon->id,
+        ])->get(route('pemohon.permintaan.show', $permintaan))
+            ->assertOk()->assertDontSee('Kirim Survei');
+
+        $permintaan->update([
+            'status' => 'data_siap',
+            'file_hasil_path' => 'hasil_permintaan/uji.xlsx',
+        ]);
+
+        $this->get(route('pemohon.permintaan.show', $permintaan))
+            ->assertOk()->assertSee('Kirim Survei')->assertSee('Unduh Data');
+
+        $this->post(route('permintaan.feedback', $permintaan), [
+            'rating' => 5,
+            'komentar' => 'Layanan membantu penelitian saya.',
+        ])->assertRedirect(route('pemohon.permintaan.show', $permintaan));
+
+        $this->assertDatabaseHas('permintaan_feedback', [
+            'permintaan_data_id' => $permintaan->id,
+            'pemohon_id' => $pemohon->id,
+            'rating' => 5,
+            'komentar' => 'Layanan membantu penelitian saya.',
+        ]);
+
+        $this->get(route('pemohon.permintaan.show', $permintaan))
+            ->assertOk()->assertSee('Terima kasih sudah mengisi survei layanan.')
+            ->assertDontSee('Kirim Survei')->assertSee('Unduh Data');
+    }
+
     public function test_permintaan_belum_data_siap_tidak_bisa_ditandai_selesai(): void
     {
         $staf = User::factory()->create();

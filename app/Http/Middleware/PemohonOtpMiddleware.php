@@ -18,9 +18,11 @@ class PemohonOtpMiddleware
                 ->first()
             : null;
 
-        if (! $pemohon) {
+        if (! $pemohon || (int) $request->session()->get('pemohon_auth_version', 0) !== $pemohon->auth_version) {
             $request->session()->forget([
                 'pemohon_id',
+                'pemohon_auth_version',
+                'izin_password',
                 'pemohon_otp',
                 'pemohon_nama',
                 'otp_nomor',

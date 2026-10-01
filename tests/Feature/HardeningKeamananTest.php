@@ -114,7 +114,7 @@ class HardeningKeamananTest extends TestCase
         ])->post('/otp/verifikasi', [
             'no_hp' => '081234567890',
             'kode_otp' => '123456',
-        ])->assertRedirect(route('permintaan.create'));
+        ])->assertRedirect(route('pemohon.password'));
 
         $this->assertDatabaseHas('pemohon', [
             'no_hp' => '6281234567890',
@@ -562,7 +562,7 @@ class HardeningKeamananTest extends TestCase
         ])->post('/otp/verifikasi', [
             'no_hp' => '+6281234567898',
             'kode_otp' => '123456',
-        ])->assertRedirect(route('permintaan.create'))
+        ])->assertRedirect(route('pemohon.password'))
             ->assertSessionHas('pemohon_id', $pemohonLama->id)
             ->assertSessionHas('pemohon_otp', '6281234567898');
 
